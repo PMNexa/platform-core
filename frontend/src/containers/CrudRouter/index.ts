@@ -40,6 +40,11 @@ export type { CrudRelationSectionProps } from "./screens/CrudRelationSection";
 export { default as CrudFormModal } from "./screens/CrudFormModal";
 export type { CrudFormModalProps } from "./screens/CrudFormModal";
 
+export { default as CrudFilterModal } from "./screens/CrudFilterModal";
+export type { CrudFilterModalProps } from "./screens/CrudFilterModal";
+
+export * from "./lib/filters";
+
 export { default as CrudLinkModal } from "./screens/CrudLinkModal";
 export type { CrudLinkModalProps } from "./screens/CrudLinkModal";
 

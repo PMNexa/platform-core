@@ -7,6 +7,8 @@ export interface DataTableQueryState {
   /** `?sort=` value - a bare field for ascending, a `-`-prefixed one for descending, `null` for unsorted. */
   sort: string | null;
   search: string;
+  /** Extra query params, appended as is - e.g. `CrudListScreen`'s `["filter{status}", "done"]` pairs. A key may repeat. */
+  filters?: [string, string][];
 }
 
 /**
@@ -22,6 +24,7 @@ export function buildDataTableUrl(endpoint: string, state: DataTableQueryState):
   params.set("page_size", String(state.pageSize));
   if (state.sort) params.set("sort", state.sort);
   if (state.search) params.set("q", state.search);
+  for (const [key, value] of state.filters ?? []) params.append(key, value);
 
   const separator = endpoint.includes("?") ? "&" : "?";
   return `${endpoint}${separator}${params.toString()}`;

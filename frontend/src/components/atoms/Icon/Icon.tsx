@@ -29,6 +29,13 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M5 12l14 0" />
     </>
   ),
+  filter: <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" />,
+  x: (
+    <>
+      <path d="M18 6l-12 12" />
+      <path d="M6 6l12 12" />
+    </>
+  ),
   link: (
     <>
       <path d="M9 15l6 -6" />
@@ -49,7 +56,7 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
 };
 
-export type IconName = "eye" | "pencil" | "trash" | "plus" | "link" | "unlink";
+export type IconName = "eye" | "pencil" | "trash" | "plus" | "filter" | "x" | "link" | "unlink";
 
 export interface IconProps {
   name: IconName;

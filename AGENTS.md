@@ -434,6 +434,17 @@ nonce that's in the fetch effect's dependency array but NOT in the built
 URL, so it forces exactly one more fetch of the current page/sort/
 search, nothing else.
 
+**Filters**: `useDataTable`'s `filters`/`setFilters` are extra query
+param pairs appended as is (back to page 1 on change). `CrudListScreen`
+fills them from its "Filter" button: `CrudFilterModal` adds conditions
+one field at a time, each with operators and a value input picked by
+the field's schema type (`lib/filters.ts`'s `operatorsFor` - text
+contains/is, number and date comparisons, choice/relation/boolean
+selects, "is empty" on nullable fields and optional relations; a
+datetime filters by whole local days). Conditions AND together, become
+`core_api.filters`' `?filter{[-]field[.lookup]}=` params, and show as
+removable chips under the header. Not kept in the URL or across visits.
+
 **Matches `core_api`'s list-endpoint contract exactly, not a generic
 "call any API" client**: `?page=`/`?page_size=` (`EnvelopePageNumberPagination`),
 `?sort=`/`-field` (`SortParamOrderingFilter`), `?q=` (`QParamSearchFilter`)

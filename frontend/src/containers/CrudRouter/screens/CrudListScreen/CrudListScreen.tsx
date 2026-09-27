@@ -5,11 +5,13 @@ import { ColumnPicker, DataTable, useDataTable } from "../../../DataTable";
 import type { DataTableColumn } from "../../../DataTable";
 import { createBaseApi } from "../../lib/baseApi";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
+import { describeCondition, filterParams, type FilterCondition } from "../../lib/filters";
 import { createCrudPaths } from "../../lib/paths";
 import { rowLabel, useRelatedDisplayFields } from "../../lib/relationOptions";
 import { createRequest } from "../../lib/request";
 import { canDo, type Schema } from "../../lib/schema";
 import { createSchemaColumns, toOneRelationFields, withRelationIncludes } from "../../lib/schemaColumns";
+import CrudFilterModal from "../CrudFilterModal";
 
 export interface CrudListScreenProps<T> {
   /** The resource's own base URL, e.g. `"/api/v1/goals"` - the only resource-shaped input this screen needs; `createBaseApi`/`createRequest` (see their own docstrings) build the actual client internally from this plus `accessToken`. */
@@ -138,6 +140,11 @@ interface CrudListScreenTableProps<T> extends Omit<CrudListScreenProps<T>, "base
  * instances. After a delete, `table.refetch()` gets the list back in
  * sync with the server.
  *
+ * "Filter" opens `CrudFilterModal` (conditions built field by field,
+ * typed per field - see `lib/filters.ts`); the applied ones show as
+ * removable chips under the header and reach the list as
+ * `?filter{...}=` params through `table.setFilters`.
+ *
  * To-one relation columns show the related row's name, not its id: the
  * list is fetched with `?include[]=` for them (`withRelationIncludes`),
  * and each related schema's `display_field` picks the label.
@@ -173,6 +180,9 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
   const paths = createCrudPaths(basePath ?? resource);
   const rowKey = (row: T) => (row as { id: string | number }).id;
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
+  const [filtering, setFiltering] = useState(false);
+  const [conditions, setConditions] = useState<FilterCondition[]>([]);
+  const fieldsByName = useMemo(() => new Map(schema.fields.map((field) => [field.name, field])), [schema]);
 
   const relationFields = useMemo(() => toOneRelationFields(schema), [schema]);
   const displayFields = useRelatedDisplayFields(relationFields, request);
@@ -246,6 +256,11 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
   const showSearch = searchable !== false && Boolean(schema.searchable);
   const table = useDataTable({ endpoint: withRelationIncludes(baseApi.endpoint, schema), columns, rowKey, fetcher: baseApi.list, searchable: showSearch });
 
+  function applyFilters(next: FilterCondition[]) {
+    setConditions(next);
+    table.setFilters(filterParams(schema, next));
+  }
+
   return (
     <Card>
       <CardHeader className="d-flex align-items-center gap-2">
@@ -266,6 +281,11 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
               style={{ maxWidth: 240 }}
             />
           )}
+          <Button type="button" variant="secondary" outline className="flex-shrink-0 text-nowrap" onClick={() => setFiltering(true)}>
+            <Icon name="filter" />
+            Filter
+            {conditions.length > 0 && <span className="badge bg-primary text-primary-fg ms-1">{conditions.length}</span>}
+          </Button>
           <ColumnPicker
             columns={table.orderedColumns}
             hiddenColumns={table.hiddenColumns}
@@ -274,6 +294,42 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
           />
         </div>
       </CardHeader>
+      {conditions.length > 0 && (
+        <div className="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-bottom">
+          {conditions.map((condition, index) => {
+            const field = fieldsByName.get(condition.field);
+            if (!field) return null;
+            const text = describeCondition(field, condition);
+            return (
+              <span key={index} className="badge bg-secondary-lt d-inline-flex align-items-center gap-1">
+                {text}
+                <button
+                  type="button"
+                  className="btn-close ms-1"
+                  style={{ width: "0.5rem", height: "0.5rem" }}
+                  aria-label={`Remove filter ${text}`}
+                  onClick={() => applyFilters(conditions.filter((_, i) => i !== index))}
+                />
+              </span>
+            );
+          })}
+          <Button type="button" variant="link" className="p-0" onClick={() => applyFilters([])}>
+            Clear
+          </Button>
+        </div>
+      )}
+      {filtering && (
+        <CrudFilterModal
+          schema={schema}
+          request={request}
+          conditions={conditions}
+          onClose={() => setFiltering(false)}
+          onApply={(next) => {
+            applyFilters(next);
+            setFiltering(false);
+          }}
+        />
+      )}
       <DataTable table={table} />
       <CardFooter>
         <Pagination

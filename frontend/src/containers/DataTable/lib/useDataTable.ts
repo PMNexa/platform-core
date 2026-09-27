@@ -54,6 +54,9 @@ export interface DataTableState<T> {
   searchable: boolean;
   search: string;
   setSearch: (next: string) => void;
+  /** Extra query params (see `DataTableQueryState.filters`); setting them goes back to page 1. */
+  filters: [string, string][];
+  setFilters: (next: [string, string][]) => void;
   rowKey: (row: T) => string | number;
   /** Forces a fresh fetch of the current page/sort/search without changing any of it - for a caller that just changed something server-side out of band (e.g. deleted a row) and needs the list to catch up. */
   refetch: () => void;
@@ -75,6 +78,7 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
   const [pageSize, setPageSizeState] = useState(defaultPageSize);
   const [sort, setSort] = useState<string | null>(defaultSort);
   const [search, setSearchState] = useState("");
+  const [filters, setFiltersState] = useState<[string, string][]>([]);
   const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((column) => column.key));
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(
     () => new Set(columns.filter((column) => column.hidden).map((column) => column.key)),
@@ -87,8 +91,8 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
   const [refetchNonce, setRefetchNonce] = useState(0);
 
   const url = useMemo(
-    () => buildDataTableUrl(endpoint, { page, pageSize, sort, search }),
-    [endpoint, page, pageSize, sort, search],
+    () => buildDataTableUrl(endpoint, { page, pageSize, sort, search, filters }),
+    [endpoint, page, pageSize, sort, search, filters],
   );
 
   useEffect(() => {
@@ -150,6 +154,11 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
     setPageState(1);
   }, []);
 
+  const setFilters = useCallback((next: [string, string][]) => {
+    setFiltersState(next);
+    setPageState(1);
+  }, []);
+
   const toggleColumn = useCallback((columnKey: string) => {
     setHiddenColumns((prev) => {
       const next = new Set(prev);
@@ -202,6 +211,9 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
     searchable,
     search,
     setSearch,
+    // filters
+    filters,
+    setFilters,
     // misc
     rowKey,
     refetch,

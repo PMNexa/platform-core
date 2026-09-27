@@ -185,3 +185,22 @@ describe("CrudListScreen", () => {
     expect(api.remove).not.toHaveBeenCalled();
   });
 });
+
+describe("CrudListScreen filters", () => {
+  it("adds a filter field by field in the modal and refetches with its params", async () => {
+    const api = mockApi();
+    render(<CrudListScreen {...PROPS} />);
+    expect(await screen.findByText("Acme")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Add filter" }), { target: { value: "name" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Name value" }), { target: { value: "ac" } });
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => expect(api.list).toHaveBeenLastCalledWith(expect.stringContaining("filter%7Bname.icontains%7D=ac")));
+    expect(screen.getByText("Name contains ac")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove filter Name contains ac" }));
+    await waitFor(() => expect(api.list).toHaveBeenLastCalledWith(expect.not.stringContaining("filter")));
+  });
+});
