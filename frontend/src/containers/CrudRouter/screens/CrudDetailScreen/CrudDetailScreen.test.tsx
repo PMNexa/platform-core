@@ -111,7 +111,35 @@ describe("CrudDetailScreen", () => {
     render(<CrudDetailScreen {...PROPS} />);
     expect(await screen.findByRole("heading", { name: "Ship v1" })).toBeInTheDocument();
     expect(screen.getByText("In progress")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute("href", "goals/g1/edit");
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+  });
+
+  it("edits in place: Edit turns Details into the form, Save updates and shows the saved record", async () => {
+    const { goals } = setup();
+    vi.mocked(goals.update).mockResolvedValue({ id: "g1", title: "Ship v2", status: "in_progress", parent: "g0", org_id: "o1" });
+    render(<CrudDetailScreen {...PROPS} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    const title = screen.getByLabelText(/Title/);
+    expect(title).toHaveValue("Ship v1");
+    expect(screen.getByRole("tab", { name: /Metrics/ })).toBeDisabled();
+    fireEvent.change(title, { target: { value: "Ship v2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByRole("heading", { name: "Ship v2" })).toBeInTheDocument();
+    expect(vi.mocked(goals.update).mock.calls[0][0]).toBe("g1");
+    expect(vi.mocked(goals.update).mock.calls[0][1]).toMatchObject({ title: "Ship v2" });
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+  });
+
+  it("Cancel leaves edit mode without saving", async () => {
+    const { goals } = setup();
+    render(<CrudDetailScreen {...PROPS} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "Nope" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByRole("heading", { name: "Ship v1" })).toBeInTheDocument();
+    expect(screen.getByText("In progress")).toBeInTheDocument();
+    expect(goals.update).not.toHaveBeenCalled();
   });
 
   it("labels to-one relations by the related schema's display field, linked where they're mounted", async () => {

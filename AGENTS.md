@@ -843,7 +843,9 @@ resource, it's all from the schema.
 **Frontend** (`containers/CrudRouter/screens/`):
 - `CrudDetailScreen` - schema, then record. Tabler page header
   (breadcrumb back to the list, `label` pretitle, `display_field` title,
-  Edit/Delete), then ONE full-width card whose tabs are "Details" (first,
+  Edit/Delete - Edit turns the Details tab into the schema-driven form
+  in place, Save/Cancel, relation tabs disabled meanwhile; no navigation
+  to the edit page), then ONE full-width card whose tabs are "Details" (first,
   selected on load: a responsive grid of fields - `lib/format.ts`'s
   `formatFieldValue`, also used by list columns; choices/booleans as
   badges; the title field and read-only uuids left out) and one per

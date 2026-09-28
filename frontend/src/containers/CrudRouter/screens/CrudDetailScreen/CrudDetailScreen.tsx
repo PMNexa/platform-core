@@ -1,19 +1,23 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode, type SubmitEvent } from "react";
 import Button from "../../../../components/atoms/Button";
 import Icon from "../../../../components/atoms/Icon";
 import Breadcrumb from "../../../../components/organisms/Breadcrumb";
-import { Card, CardBody, CardHeader } from "../../../../components/organisms/Card";
+import { Card, CardBody, CardFooter, CardHeader } from "../../../../components/organisms/Card";
 import { DefaultLink } from "../../../../components/types";
 import type { LinkComponent } from "../../../../components/types";
 import type { DataTablePage } from "../../../DataTable";
 import { createBaseApi } from "../../lib/baseApi";
+import { pickFieldValues } from "../../lib/fields";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
 import { formatFieldValue } from "../../lib/format";
 import { createCrudPaths } from "../../lib/paths";
-import { rowLabel } from "../../lib/relationOptions";
+import { rowLabel, useRelationFields } from "../../lib/relationOptions";
 import { createRequest } from "../../lib/request";
 import { canDo, type Schema, type SchemaField } from "../../lib/schema";
 import { loadSchema } from "../../lib/schemaCache";
+import { createSchemaFields } from "../../lib/schemaFields";
+import { useCrudForm } from "../../lib/useCrudForm";
+import CrudFormFields from "../CrudFormFields";
 import CrudRelationSection from "../CrudRelationSection";
 
 type Row = Record<string, unknown>;
@@ -32,7 +36,7 @@ export interface CrudDetailScreenProps {
   accessToken: string;
   /** The record's id - a prop, not a router param (same rule as `CrudEditScreen`). */
   id: string | number;
-  /** This resource's UI mount path when it isn't the bare resource name (e.g. `"platform-org/orgs"`) - same as `CrudListScreen`'s. Used for the breadcrumb and the Edit link. */
+  /** This resource's UI mount path when it isn't the bare resource name (e.g. `"platform-org/orgs"`) - same as `CrudListScreen`'s. Used for the breadcrumb. */
   basePath?: string;
   linkComponent?: LinkComponent;
   /**
@@ -56,7 +60,9 @@ export interface CrudDetailScreenProps {
  * relation - so a relation's table gets the page's whole width:
  * - page header: breadcrumb back to the list (`label_plural`), the
  *   resource `label` as pretitle, the row's `display_field` as title,
- *   Edit/Delete;
+ *   Edit/Delete. Edit switches the "Details" tab to the schema-driven
+ *   form in place (Save/Cancel) - no trip to the edit page, so it works
+ *   the same inside a host's drawer; the relation tabs wait meanwhile;
  * - "Details" tab: every other scalar/to-one field in a responsive grid
  *   (`formatFieldValue`; a choice as a badge; `multiline` text as its own
  *   full-width block). A read-only `format: "uuid"` field that isn't a
@@ -141,6 +147,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
   const [record, setRecord] = useState<Row | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const detailFields = useMemo(() => schema.fields.filter((field) => isShownDetail(field, schema.display_field)), [schema]);
   const relations = useMemo(
@@ -220,11 +227,17 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
             <h2 className="page-title text-break">{title}</h2>
           </div>
           <div className="col-auto ms-auto d-flex gap-2">
-            {canDo(schema, "update") && (
-              <Link to={paths.editPath(id)} className="btn btn-primary btn-sm">
+            {canDo(schema, "update") && !editing && (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setActiveTab(DETAILS_TAB);
+                  setEditing(true);
+                }}
+              >
                 <Icon name="pencil" />
                 Edit
-              </Link>
+              </Button>
             )}
             {canDo(schema, "delete") && (
               <Button variant="danger" outline disabled={deleting} onClick={handleDelete}>
@@ -260,6 +273,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
                     role="tab"
                     aria-selected={selected}
                     className={`nav-link${selected ? " active" : ""}`}
+                    disabled={editing}
                     onClick={() => setActiveTab(relation.name)}
                   >
                     {relation.label}
@@ -287,6 +301,19 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
             onChanged={handleRelationChanged}
             parentCanUpdate={canDo(schema, "update")}
           />
+        ) : editing ? (
+          <DetailEditForm
+            id={id}
+            schema={schema}
+            record={record}
+            baseApi={baseApi}
+            request={request}
+            onSaved={(row) => {
+              setRecord(row);
+              setEditing(false);
+            }}
+            onCancel={() => setEditing(false)}
+          />
         ) : (
           <CardBody>
             {detailFields.length === 0 ? (
@@ -307,6 +334,60 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
         )}
       </Card>
     </>
+  );
+}
+
+/**
+ * The "Details" tab in edit mode: the same fields and form state as
+ * `CrudEditScreen` (`createSchemaFields` + `useRelationFields`,
+ * `pickFieldValues` on save), prefilled from the record already on screen.
+ */
+function DetailEditForm({
+  id,
+  schema,
+  record,
+  baseApi,
+  request,
+  onSaved,
+  onCancel,
+}: {
+  id: string | number;
+  schema: Schema;
+  record: Row;
+  baseApi: BaseApi<Row>;
+  request: BaseApiRequest;
+  onSaved: (row: Row) => void;
+  onCancel: () => void;
+}) {
+  const baseFields = useMemo(() => createSchemaFields<Row>(schema), [schema]);
+  const fields = useRelationFields(baseFields, request);
+  const form = useCrudForm<Row>(record);
+
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const row = await form.submit((values) => baseApi.update(id, pickFieldValues(values, fields)));
+    if (row) onSaved(row);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <CardBody>
+        <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} />
+        {form.error && (
+          <p className="text-danger mb-0" role="alert">
+            {form.error.message}
+          </p>
+        )}
+      </CardBody>
+      <CardFooter className="d-flex gap-2">
+        <Button type="submit" variant="primary" disabled={form.submitting}>
+          {form.submitting ? "Saving…" : "Save"}
+        </Button>
+        <Button type="button" onClick={onCancel} disabled={form.submitting}>
+          Cancel
+        </Button>
+      </CardFooter>
+    </form>
   );
 }
 
