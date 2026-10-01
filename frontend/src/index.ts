@@ -10,3 +10,11 @@ export * from "./containers";
 // generic route files (e.g. a detail screen in a drawer) and wants its
 // relation links to land where the host mounted each resource.
 export { useResourcePath } from "./routes/useResourcePath";
+
+// System administration (platform_system's admin API): settings, audit
+// log, email log - pages and their sidebar group.
+export { default as SystemSettingsScreen } from "./system/SystemSettingsScreen";
+export type { SystemSettingsScreenProps } from "./system/SystemSettingsScreen";
+export { createSystemNavItems, createSystemRoutes } from "./system/routes";
+export { default as SystemStatusScreen } from "./system/SystemStatusScreen";
+export { default as AnnouncementBanner } from "./system/AnnouncementBanner";

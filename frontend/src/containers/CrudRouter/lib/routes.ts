@@ -87,6 +87,8 @@ export interface CrudRoutesOptions {
   editFile?: string;
   /** Same as `editFile`, for the detail route (`:id`, the generic `crud-detail.tsx`). */
   detailFile?: string;
+  /** Same as `editFile`, for the list route (the index, the generic `crud-list.tsx`). */
+  listFile?: string;
 }
 
 export function createCrudRoutes(apiPath: string, options: CrudRoutesOptions = {}): RouteEntry[] {
@@ -99,7 +101,7 @@ export function createCrudRoutes(apiPath: string, options: CrudRoutesOptions = {
   // without an explicit one here, two resources registering the same
   // file would collide ("duplicate route id", confirmed the hard way).
   return prefixRoutes(resource, [
-    { index: true, file: file("crud-list.tsx"), id: `crud-list-${resource}` },
+    { index: true, file: options.listFile ?? file("crud-list.tsx"), id: `crud-list-${resource}` },
     { path: "new", file: file("crud-new.tsx"), id: `crud-new-${resource}` },
     { path: ":id", file: options.detailFile ?? file("crud-detail.tsx"), id: `crud-detail-${resource}` },
     { path: ":id/edit", file: options.editFile ?? file("crud-edit.tsx"), id: `crud-edit-${resource}` },
