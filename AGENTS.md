@@ -194,10 +194,13 @@ every viewport width, not just mobile (the element still reports
 which is what made an earlier check wrongly conclude only mobile was
 broken). Keep checking this if you ever add a class to `Header`.
 
-**The sidebar's mobile toggler needs Bootstrap's JS** (`data-bs-toggle=
-"collapse"`) — inert without it. The host loads Tabler's JS bundle (see
-`apps/main/frontend/app/root.tsx`'s `<script>` tag), same "host loads
-the design system" convention as Tabler's CSS.
+**Below lg the sidebar menu is a left `Drawer`**: the top bar's toggler
+opens the same nav list in platform-core's own `Drawer`
+(`placement="start"`), React state - no Bootstrap collapse JS. It closes
+on navigation (`currentPath` changes), Escape/backdrop/close, and when
+the viewport grows to lg. Outside `.navbar-vertical` Tabler floats a
+group's `.dropdown-menu` as a popover, so `Sidebar` ships a small style
+string (`SIDEBAR_DRAWER_STYLES`) that opens it inline instead.
 
 **Folding the sidebar (desktop, lg+)** uses Tabler's own
 `.navbar-folded` class on `Sidebar`'s `<aside>`: Tabler's CSS narrows it
