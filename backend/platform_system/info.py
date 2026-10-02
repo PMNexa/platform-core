@@ -72,11 +72,20 @@ def system_info() -> list[dict]:
             ],
         },
         {
+            "group": "Single sign-on",
+            "rows": [
+                {"label": "Provider", "value": getattr(settings, "OIDC_ISSUER", "") or "not configured", "hint": "OIDC_ISSUER"},
+                {"label": "Client ID", "value": getattr(settings, "OIDC_CLIENT_ID", "") or "—", "hint": "OIDC_CLIENT_ID"},
+            ],
+        },
+        {
             "group": "Secrets",
             "rows": [
                 {"label": "Django secret key", "value": _secret_state(settings.SECRET_KEY), "hint": "DJANGO_SECRET_KEY"},
                 {"label": "Login token secret", "value": _secret_state(getattr(settings, "JWT_SECRET", "")), "hint": "JWT_SECRET"},
                 {"label": "Email password", "value": "set" if getattr(settings, "EMAIL_HOST_PASSWORD", "") else "not set"},
+                {"label": "Single sign-on client secret",
+                 "value": "set" if getattr(settings, "OIDC_CLIENT_SECRET", "") else "not set", "hint": "OIDC_CLIENT_SECRET"},
             ],
         },
         {
