@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Header from "../../organisms/Header";
 import Sidebar from "../../organisms/Sidebar";
+import UserMenu from "../../molecules/UserMenu";
 import { DefaultLink, type AppShellUser, type LinkComponent, type NavEntry, type UserMenuEntry } from "../../types";
 
 export interface DashboardLayoutProps {
@@ -100,6 +101,9 @@ function useSidebarFolded(initial: boolean) {
  * child (Tabler doesn't put it on `.page-body` for you). Fluid, not
  * `.container-xl`: content (and the header, which matches it) uses the
  * whole width beside the sidebar, with no max-width.
+ *
+ * Below lg there is ONE bar: the sidebar's top bar (menu toggler, brand)
+ * also carries the user menu, and the header is hidden.
  */
 function DashboardLayout({
   navItems,
@@ -126,6 +130,15 @@ function DashboardLayout({
         folded={folded}
         closedGroups={closedGroups}
         onToggleGroup={toggleGroup}
+        mobileEnd={
+          user ? (
+            <UserMenu user={user} items={userMenu} onLogout={onLogout} onOpen={onUserMenuOpen} linkComponent={linkComponent} />
+          ) : onLogout ? (
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onLogout}>
+              Log out
+            </button>
+          ) : undefined
+        }
       />
       <Header
         user={user}
@@ -135,6 +148,7 @@ function DashboardLayout({
         linkComponent={linkComponent}
         onToggleSidebar={toggleFolded}
         sidebarFolded={folded}
+        desktopOnly
       />
       <div className="page-wrapper">
         <main className="page-body">

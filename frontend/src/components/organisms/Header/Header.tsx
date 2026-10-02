@@ -14,6 +14,8 @@ export interface HeaderProps {
   onToggleSidebar?: () => void;
   /** Current fold state - drives the toggle's label/`aria-expanded`. */
   sidebarFolded?: boolean;
+  /** Hide the whole header below lg - for a layout whose sidebar top bar already carries the user menu there (`Sidebar`'s `mobileEnd`). */
+  desktopOnly?: boolean;
 }
 
 /** Tabler's "layout-sidebar" outline icon (MIT), inlined - no icon font is loaded. */
@@ -50,9 +52,9 @@ function SidebarIcon() {
  * The user block is a dropdown (`UserMenu`): the host's `userMenu`
  * entries, then "Log out". With no user, a bare "Log out" button.
  */
-function Header({ user, onLogout, userMenu, onUserMenuOpen, linkComponent, onToggleSidebar, sidebarFolded = false }: HeaderProps) {
+function Header({ user, onLogout, userMenu, onUserMenuOpen, linkComponent, onToggleSidebar, sidebarFolded = false, desktopOnly = false }: HeaderProps) {
   return (
-    <header className="navbar d-print-none sticky-top bg-white">
+    <header className={`navbar d-print-none sticky-top bg-white${desktopOnly ? " d-none d-lg-flex" : ""}`}>
       <div className="container-fluid">
         {onToggleSidebar && (
           <button

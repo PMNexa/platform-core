@@ -16,6 +16,8 @@ export interface SidebarProps {
   /** Which groups are closed, by label (expanded sidebar) - absent = open. */
   closedGroups?: ReadonlySet<string>;
   onToggleGroup?: (label: string) => void;
+  /** Below lg only: shown at the end of the top bar (e.g. the user menu), so a small screen has ONE bar - the layout hides its `Header` there. */
+  mobileEnd?: ReactNode;
 }
 
 // Outside `.navbar-vertical`, Tabler floats a nav group's `.dropdown-menu`
@@ -46,8 +48,11 @@ function isActive(currentPath: string, to: string): boolean {
  * same menu in a `Drawer` from the left (React state, not Bootstrap's
  * collapse JS). It closes on navigation (`currentPath` changes), on
  * Escape / backdrop / close button, and when the viewport grows to lg.
+ * That top bar is the only bar on a small screen (`mobileEnd` carries
+ * the user menu), so it's `sticky-top`; at lg Tabler's own
+ * `.navbar-vertical.navbar-expand-lg` rule (position: fixed) outranks it.
  */
-function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, closedGroups, onToggleGroup }: SidebarProps) {
+function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, closedGroups, onToggleGroup, mobileEnd }: SidebarProps) {
   // The path the drawer was opened on: navigating elsewhere closes it, no effect needed.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const drawerOpen = openOn === currentPath;
@@ -85,7 +90,7 @@ function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, 
     );
 
   return (
-    <aside className={`navbar navbar-vertical navbar-expand-lg${folded ? " navbar-folded" : ""}`}>
+    <aside className={`navbar navbar-vertical navbar-expand-lg sticky-top${folded ? " navbar-folded" : ""}`}>
       <div className="container-fluid">
         <button
           className="navbar-toggler"
@@ -114,6 +119,7 @@ function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, 
           // puts a lone initial at the left edge - center it on the rail.
           className={folded ? "justify-content-lg-center" : undefined}
         />
+        {mobileEnd && <div className="navbar-nav flex-row align-items-center d-lg-none ms-auto">{mobileEnd}</div>}
         <div className="collapse navbar-collapse" id="sidebar-menu">
           <ul className="navbar-nav pt-lg-3">{renderNav(folded)}</ul>
         </div>
