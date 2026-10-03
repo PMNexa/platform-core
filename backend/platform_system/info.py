@@ -76,6 +76,7 @@ def system_info() -> list[dict]:
             "rows": [
                 {"label": "Provider", "value": getattr(settings, "OIDC_ISSUER", "") or "not configured", "hint": "OIDC_ISSUER"},
                 {"label": "Client ID", "value": getattr(settings, "OIDC_CLIENT_ID", "") or "—", "hint": "OIDC_CLIENT_ID"},
+                *_listed_sso_providers(),
             ],
         },
         {
@@ -92,6 +93,17 @@ def system_info() -> list[dict]:
             "group": "Rate limits",
             "rows": [{"label": name.replace("_", " "), "value": rate} for name, rate in sorted(rates.items())],
         },
+    ]
+
+
+def _listed_sso_providers() -> list[dict]:
+    """The providers in `OIDC_PROVIDERS` - their issuer, and only whether each secret is there."""
+    listed = getattr(settings, "OIDC_PROVIDERS", None) or []
+    return [
+        {"label": f"Provider \"{entry.get('label') or entry.get('id')}\"",
+         "value": f"{entry.get('issuer') or '—'} (client secret {'set' if entry.get('client_secret') else 'not set'})",
+         "hint": "OIDC_PROVIDERS"}
+        for entry in listed if isinstance(entry, dict)
     ]
 
 
