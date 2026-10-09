@@ -16,6 +16,10 @@ class PlatformSystemConfig(AppConfig):
 
         request_started.connect(lambda **kwargs: invalidate(), weak=False, dispatch_uid="platform_system.settings")
 
+        from platform_system.insights import register_builtins
+
+        register_builtins()
+
         register_setting(SettingDef(
             "email.from_name", "Sender name", STRING, default="GoalNexa", group="Email",
             help="The name emails come from; the address itself is EMAIL_FROM.",

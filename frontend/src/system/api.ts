@@ -39,6 +39,39 @@ export interface SystemStatus {
   usage: InfoGroup[];
 }
 
+/** A cell of an Insights table: text, or text with a bar (share) or a heat shade (0-1). */
+export type InsightCell = string | number | { text: string | number; bar?: number; heat?: number; hint?: string };
+
+export type InsightBlock =
+  | { kind: "tiles"; title?: string; items: { label: string; value: string | number; hint?: string }[] }
+  | {
+      kind: "table";
+      title?: string;
+      empty?: string;
+      columns: { label: string; align?: "end" }[];
+      rows: InsightCell[][];
+    };
+
+/** System > Insights (`/api/v1/system-settings/insights`) - see platform_system/insights.py. */
+export interface Insights {
+  days: number;
+  start: string;
+  end: string;
+  previous_start: string;
+  series: {
+    key: string;
+    label: string;
+    group: string;
+    help: string;
+    /** "total": a level (shows its latest value); "daily": events per day (a range sums them). */
+    kind: "total" | "daily";
+    unit: string;
+    /** [ISO date, value], from `previous_start` to `end`. */
+    points: [string, number][];
+  }[];
+  sections: { key: string; title: string; description: string; blocks: InsightBlock[] }[];
+}
+
 export interface Announcement {
   text: string;
   level: "info" | "warning" | "danger";
@@ -59,6 +92,8 @@ export function systemApi(accessToken: string) {
       }),
     auditCsv: () => request<string>("/api/v1/audit-events/export"),
     status: () => request<SystemStatus>("/api/v1/system-settings/status"),
+    insights: (days: number) => request<Insights>(`/api/v1/system-settings/insights?days=${days}`),
+    insightsCsv: (days: number) => request<string>(`/api/v1/system-settings/insights-csv?days=${days}`),
     announcement: () => request<Announcement>("/api/v1/announcement"),
   };
 }

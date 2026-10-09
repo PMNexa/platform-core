@@ -106,3 +106,63 @@ class DeliveryAttempt(models.Model):
         db_table = "delivery_attempt"
         verbose_name = "notification"
         verbose_name_plural = "notifications"
+
+
+class UserPresence(models.Model):
+    """When a user was last active (`core_api.system.seen`), overall and
+    per channel - the website or an AI assistant. A bare user id."""
+
+    user_id = models.CharField(max_length=64, primary_key=True)
+    last_seen_at = models.DateTimeField(db_index=True)
+    last_web_at = models.DateTimeField(null=True, blank=True)
+    last_agent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "user_presence"
+
+
+class UserDay(models.Model):
+    """One row per user per day they were active (in UTC), with the
+    channels they used - what active-user counts and cohorts are built from."""
+
+    user_id = models.CharField(max_length=64)
+    date = models.DateField(db_index=True)
+    web = models.BooleanField(default=False)
+    agent = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "user_day"
+        constraints = [models.UniqueConstraint(fields=["user_id", "date"], name="user_day_unique")]
+
+
+class DailyStat(models.Model):
+    """An Insights number (`core_api.system.InsightSeries`) at the end of a day."""
+
+    date = models.DateField()
+    key = models.CharField(max_length=100)
+    value = models.FloatField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "daily_stat"
+        constraints = [models.UniqueConstraint(fields=["key", "date"], name="daily_stat_unique")]
+        indexes = [models.Index(fields=["date"])]
+
+
+class EventCount(models.Model):
+    """Events counted per day (`core_api.system.count`): how many, how many
+    failed, total time, and a latency histogram (`hist`: bucket upper bound
+    in ms -> count) for percentiles."""
+
+    date = models.DateField()
+    kind = models.CharField(max_length=32)
+    key = models.CharField(max_length=200)
+    count = models.PositiveIntegerField(default=0)
+    errors = models.PositiveIntegerField(default=0)
+    total_ms = models.FloatField(default=0)
+    hist = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = "event_count"
+        constraints = [models.UniqueConstraint(fields=["date", "kind", "key"], name="event_count_unique")]
+        indexes = [models.Index(fields=["kind", "date"])]

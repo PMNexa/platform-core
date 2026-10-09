@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_default_exception_handler
 
 from core_api.errors import ApiError
+from core_api.system import count
 
 _STATUS_CODE_TO_GENERIC_CODE = {
     400: "bad_request",
@@ -49,6 +50,11 @@ def platform_exception_handler(exc, context):
     response = drf_default_exception_handler(exc, context)
     if response is None:
         return None
+
+    if isinstance(exc, drf_exceptions.Throttled):
+        # For the admin's Insights page: which endpoint turned callers away.
+        view = context.get("view")
+        count("rate_limit", type(view).__name__ if view is not None else "unknown")
 
     if isinstance(exc, drf_exceptions.ValidationError):
         response.data = {

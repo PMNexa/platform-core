@@ -17,4 +17,5 @@ export { default as SystemSettingsScreen } from "./system/SystemSettingsScreen";
 export type { SystemSettingsScreenProps } from "./system/SystemSettingsScreen";
 export { createSystemNavItems, createSystemRoutes } from "./system/routes";
 export { default as SystemStatusScreen } from "./system/SystemStatusScreen";
+export { default as SystemInsightsScreen } from "./system/SystemInsightsScreen";
 export { default as AnnouncementBanner } from "./system/AnnouncementBanner";

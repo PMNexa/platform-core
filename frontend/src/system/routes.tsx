@@ -5,6 +5,7 @@ import { createCrudRoutes, prefixRoutes, routeFilePath, type RouteEntry } from "
 /**
  * The system admin's pages, under a HOST-chosen mount
  * (`createSystemRoutes("system")`): `settings` (SystemSettingsScreen),
+ * `status`, `insights` (SystemInsightsScreen),
  * `audit-events` and `outgoing-emails` (the audit log and the email
  * delivery log - generic, schema-driven lists with search and filters).
  * Browser-safe like every route builder here.
@@ -21,6 +22,11 @@ export function createSystemRoutes(basePath: string): RouteEntry[] {
       id: "platform-system-status",
       path: `${base}/status`,
       file: routeFilePath(import.meta.url, "../routes/system-status.tsx"),
+    },
+    {
+      id: "platform-system-insights",
+      path: `${base}/insights`,
+      file: routeFilePath(import.meta.url, "../routes/system-insights.tsx"),
     },
     ...prefixRoutes(base, [
       ...createCrudRoutes("/api/v1/audit-events"),
@@ -44,6 +50,7 @@ export function createSystemNavItems(basePath: string, extra: NavItem[] = []): N
       icon: <SystemIcon />,
       children: [
         { label: "Status", to: `${base}/status`, permission: "system-settings.view" },
+        { label: "Insights", to: `${base}/insights`, permission: "system-settings.view" },
         { label: "Settings", to: `${base}/settings`, permission: "system-settings.view" },
         ...extra,
         { label: "Audit log", to: `${base}/audit-events`, permission: "audit-events.view" },

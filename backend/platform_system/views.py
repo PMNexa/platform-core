@@ -121,6 +121,24 @@ class SystemSettingViewSet(BaseViewSet):
         return Response(_describe(self._definition(key)))
 
     @action(detail=False, methods=["get"])
+    def insights(self, request):
+        """The Insights page: daily numbers over `?days=` (1-90, default 30)
+        and the previous period, plus every module's sections."""
+        from platform_system.insights import clamp_days, insights
+
+        return Response(insights(clamp_days(request.query_params.get("days"))))
+
+    @action(detail=False, methods=["get"], url_path="insights-csv")
+    def insights_csv(self, request):
+        """The daily numbers as CSV, one column per series."""
+        from platform_system.insights import clamp_days, insights_csv
+
+        days = clamp_days(request.query_params.get("days"))
+        response = HttpResponse(insights_csv(days), content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="insights-{days}d.csv"'
+        return response
+
+    @action(detail=False, methods=["get"])
     def status(self, request):
         """The Status page: scheduler heartbeats, last day's deliveries, usage."""
         return Response(system_status())

@@ -333,3 +333,156 @@ def export_user_data(user_id) -> dict:
             logger.exception("Export provider %s failed", name)
             data[name] = {"error": "couldn't export this part"}
     return data
+
+
+# --- data retention ------------------------------------------------------
+#
+# A module that keeps rows which pile up (logs, history) registers a rule:
+# a system setting `retention.<name>_days` (0 = keep forever) and a purge
+# function deleting rows older than a cutoff. `run_system_jobs` applies
+# every rule once a day.
+
+
+@dataclass(frozen=True)
+class RetentionRule:
+    name: str
+    label: str
+    #: Deletes rows created before `cutoff` (an aware datetime); returns how many.
+    purge: Callable[[Any], int]
+    help: str = ""
+    #: The host can set a different default (`SYSTEM_SETTING_DEFAULTS`).
+    default_days: int = 0
+
+
+_retention_rules: dict[str, RetentionRule] = {}
+
+
+def _non_negative(value) -> None:
+    if int(value) < 0:
+        raise ValueError("0 (keep forever) or more days.")
+
+
+def register_retention_rule(rule: RetentionRule) -> None:
+    """Also declares its setting, `retention.<name>_days`, under "Data retention"."""
+    _retention_rules[rule.name] = rule
+    register_setting(SettingDef(
+        f"retention.{rule.name}_days", f"Keep {rule.label} for (days)", INT, default=rule.default_days,
+        group="Data retention", validate=_non_negative,
+        help=(rule.help + " " if rule.help else "") + "0 = keep forever. Older rows are deleted once a day.",
+    ))
+
+
+def retention_rules() -> list[RetentionRule]:
+    return list(_retention_rules.values())
+
+
+# --- insights: who is active, counters, daily numbers ----------------------
+#
+# The admin's Insights page (`/system/insights`). Aggregates only, nothing
+# leaves the instance. Without `platform_system` every call here is a no-op.
+
+#: A user's channel: the website, or an AI assistant (MCP).
+WEB, AGENT = "web", "agent"
+
+
+def seen(user_id, channel: str = WEB) -> None:
+    """The user did something just now through `channel` - signed in,
+    refreshed a session, called an MCP tool, checked in. Kept as their
+    `last_seen_at` and one row per active day, written at most hourly per
+    process, so calling it on every request is cheap. Never raises."""
+    if not user_id or not apps.is_installed(SYSTEM_APP):
+        return
+    try:
+        from platform_system.insights import record_seen
+
+        record_seen(str(user_id), channel)
+    except Exception:
+        logger.exception("Couldn't record activity for %s", user_id)
+
+
+def count(kind: str, key: str, *, ok: bool = True, ms: float | None = None) -> None:
+    """Counts one event per day - an API request ("http", "GET
+    /api/v1/goals"), an MCP tool call ("mcp.tool", name), a rate-limit hit,
+    a job run - with whether it failed and how long it took. Buffered in
+    the process and written every few seconds. Never raises."""
+    if not apps.is_installed(SYSTEM_APP):
+        return
+    try:
+        from platform_system.insights import record_count
+
+        record_count(kind, key, ok=ok, ms=ms)
+    except Exception:
+        logger.exception("Couldn't count %s %s", kind, key)
+
+
+def active_user_count(days: int) -> int | None:
+    """Users active in the last `days` days (see `seen`); None without `platform_system`."""
+    if not apps.is_installed(SYSTEM_APP):
+        return None
+    from platform_system.insights import active_users, today
+
+    return active_users(today(), days)
+
+
+def counted(kind: str, day) -> tuple[int, int]:
+    """(events, failures) of `kind` counted on `day` (a date)."""
+    if not apps.is_installed(SYSTEM_APP):
+        return 0, 0
+    from platform_system.insights import counted_on
+
+    return counted_on(kind, day)
+
+
+@dataclass(frozen=True)
+class InsightSeries:
+    """A number tracked per day on the Insights page: `compute(day)` is its
+    value at the end of `day` (a date) - a total so far ("Users") or what
+    happened that day ("Check-ins"). Written once a day by the scheduler
+    (today's refreshed hourly) and backfilled for past days the first
+    time, so it must work for any past day."""
+
+    key: str
+    label: str
+    group: str
+    compute: Callable[[Any], float]
+    help: str = ""
+    #: "total" (a level - change is its difference) or "daily" (events per
+    #: day - a range sums them).
+    kind: str = "total"
+    #: Shown after the value, e.g. "%".
+    unit: str = ""
+
+
+@dataclass(frozen=True)
+class InsightSection:
+    """A part of the Insights page computed live for the chosen range:
+    `build(days)` returns blocks - `{"kind": "tiles", "items": [{"label",
+    "value", "hint"?}]}` or `{"kind": "table", "title"?, "columns":
+    [{"label", "align"?: "end"}], "rows": [[cell, ...]], "empty"?}` where a
+    cell is text/number or `{"text", "bar"?: 0-1, "heat"?: 0-1, "hint"?}`."""
+
+    key: str
+    title: str
+    build: Callable[[int], list[dict]]
+    description: str = ""
+    order: int = 100
+
+
+_insight_series: dict[str, InsightSeries] = {}
+_insight_sections: dict[str, InsightSection] = {}
+
+
+def register_insight_series(series: InsightSeries) -> None:
+    _insight_series[series.key] = series
+
+
+def insight_series() -> list[InsightSeries]:
+    return list(_insight_series.values())
+
+
+def register_insight_section(section: InsightSection) -> None:
+    _insight_sections[section.key] = section
+
+
+def insight_sections() -> list[InsightSection]:
+    return sorted(_insight_sections.values(), key=lambda s: (s.order, s.title))
