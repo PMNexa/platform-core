@@ -52,6 +52,7 @@ export function createSchemaColumns<T>(schema: Schema, displayFields: Record<str
     (field): DataTableColumn<T> => ({
       key: field.name,
       header: field.label,
+      ...(field.help_text ? { hint: field.help_text } : {}),
       sortable: field.type !== "relation",
       // An opaque read-only id (e.g. `owner_id`) or long text is noise in
       // a row - still available through the column picker.

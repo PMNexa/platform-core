@@ -3,8 +3,18 @@ import Pagination from "../../components/organisms/Pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../../components/organisms/Table";
 import ColumnPicker from "./ColumnPicker";
 import { sortDirectionForColumn } from "./lib/query";
-import type { DataTableConfig } from "./lib/types";
+import type { DataTableColumn, DataTableConfig } from "./lib/types";
 import { useDataTable, type DataTableState } from "./lib/useDataTable";
+
+/** A header's label; with a `hint`, dotted-underlined and explained on hover. */
+function headerWithHint<T>(column: DataTableColumn<T>) {
+  if (!column.hint) return column.header;
+  return (
+    <span title={column.hint} style={{ cursor: "help", textDecoration: "underline dotted", textUnderlineOffset: "3px" }}>
+      {column.header}
+    </span>
+  );
+}
 
 export type DataTableProps<T> =
   | { config: DataTableConfig<T>; table?: undefined }
@@ -88,10 +98,10 @@ function DataTableView<T>({ table, bare = false }: { table: DataTableState<T>; b
                     onSort={() => table.toggleSort(column)}
                     sortKey={column.sortKey ?? column.key}
                   >
-                    {column.header}
+                    {headerWithHint(column)}
                   </TableHeaderCell>
                 ) : (
-                  <TableHeaderCell key={column.key}>{column.header}</TableHeaderCell>
+                  <TableHeaderCell key={column.key}>{headerWithHint(column)}</TableHeaderCell>
                 ),
               )}
             </TableRow>

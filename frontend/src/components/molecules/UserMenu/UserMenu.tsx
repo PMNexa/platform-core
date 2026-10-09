@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import UserSummary from "../UserSummary";
+import Avatar from "../../atoms/Avatar";
 import { DefaultLink, type AppShellUser, type LinkComponent, type UserMenuEntry } from "../../types";
 
 export interface UserMenuProps {
@@ -73,7 +73,7 @@ function UserMenu({ user, items = [], onLogout, onOpen, linkComponent: Link = De
         aria-label={`Account menu for ${user.name}`}
         onClick={toggle}
       >
-        <UserSummary user={user} />
+        <Avatar name={user.name} />
       </button>
       {open && (
         <div
@@ -81,6 +81,11 @@ function UserMenu({ user, items = [], onLogout, onOpen, linkComponent: Link = De
           className="dropdown-menu dropdown-menu-end dropdown-menu-arrow show"
           style={{ position: "absolute", top: "100%", right: 0, left: "auto", minWidth: "14rem" }}
         >
+          <div className="dropdown-header">
+            <div className="text-body">{user.name}</div>
+            <div className="small text-secondary">{user.email}</div>
+          </div>
+          <div className="dropdown-divider" />
           {items.map((entry, index) => {
             if ("divider" in entry) return <div key={index} className="dropdown-divider" />;
             if ("header" in entry) {

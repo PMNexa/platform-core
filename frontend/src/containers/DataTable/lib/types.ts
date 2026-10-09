@@ -19,6 +19,8 @@ export interface DataTableColumn<T> {
   /** Field name - also the default `?sort=` key and the `data-label` for a stacked table. */
   key: string;
   header: ReactNode;
+  /** Plain-language explanation of the column, shown on hover over its header (from a schema field's `help_text`). */
+  hint?: string;
   /** Defaults to `String(row[key])`. */
   render?: (row: T) => ReactNode;
   /** Adds a `.table-sort` button wired to `?sort=`. */

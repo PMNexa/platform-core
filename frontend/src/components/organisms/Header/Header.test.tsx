@@ -10,9 +10,9 @@ describe("Header", () => {
     expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument();
   });
 
-  it("shows the user summary when a user is given", () => {
+  it("shows the account button when a user is given", () => {
     render(<Header user={user} />);
-    expect(screen.getByText("Dev User")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Account menu for Dev User" })).toBeInTheDocument();
   });
 
   it("calls onLogout from a bare button when there is no user", () => {
