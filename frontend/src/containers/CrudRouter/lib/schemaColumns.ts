@@ -32,10 +32,10 @@ export function withRelationIncludes(endpoint: string, schema: Schema, skip: str
   return `${endpoint}${endpoint.includes("?") ? "&" : "?"}include[]=${names.join(",")}`;
 }
 
-/** A relation cell's value: a sideloaded row shows its `display_field` (falling back to its id), a bare id shows as is. */
-function relationValue(value: unknown, displayField?: string): string {
+/** A relation cell's value: a sideloaded row shows its `display_field` (falling back to its id), a bare id its label from `bareLabels` if known, else as is. */
+function relationValue(value: unknown, displayField?: string, bareLabel?: string): string {
   if (value && typeof value === "object") return rowLabel(value as Record<string, unknown>, displayField);
-  return value == null || value === "" ? "—" : String(value);
+  return value == null || value === "" ? "—" : (bareLabel ?? String(value));
 }
 
 /**
@@ -45,9 +45,14 @@ function relationValue(value: unknown, displayField?: string): string {
  * relation column shows the related row's `display_field` when the list
  * was fetched with `withRelationIncludes` - `displayFields` maps each
  * related endpoint to its schema's `display_field` (see
- * `useRelatedDisplayFields`); until that loads, the cell shows the id.
+ * `useRelatedDisplayFields`); a bare cross-module id shows its label from
+ * `bareLabels` (`useBareRelationLabels`); until either loads, the cell shows the id.
  */
-export function createSchemaColumns<T>(schema: Schema, displayFields: Record<string, string | undefined> = {}): DataTableColumn<T>[] {
+export function createSchemaColumns<T>(
+  schema: Schema,
+  displayFields: Record<string, string | undefined> = {},
+  bareLabels: Record<string, string> = {},
+): DataTableColumn<T>[] {
   return schema.fields.filter(isDisplayable).map(
     (field): DataTableColumn<T> => ({
       key: field.name,
@@ -60,7 +65,12 @@ export function createSchemaColumns<T>(schema: Schema, displayFields: Record<str
       truncate: field.multiline,
       render: (row) => {
         const value = (row as Record<string, unknown>)[field.name];
-        if (field.type === "relation") return relationValue(value, field.related_endpoint ? displayFields[field.related_endpoint] : undefined);
+        if (field.type === "relation")
+          return relationValue(
+            value,
+            field.related_endpoint ? displayFields[field.related_endpoint] : undefined,
+            field.related_endpoint && value != null ? bareLabels[`${field.related_endpoint}/${String(value)}`] : undefined,
+          );
         return formatFieldValue(field, value);
       },
     }),

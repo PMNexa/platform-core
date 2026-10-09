@@ -9,7 +9,7 @@ import type { LinkComponent } from "../../../../components/types";
 import { ColumnPicker, DataTable, useDataTable } from "../../../DataTable";
 import type { DataTableColumn } from "../../../DataTable";
 import { createBaseApi } from "../../lib/baseApi";
-import { rowLabel, useRelatedDisplayFields } from "../../lib/relationOptions";
+import { rowLabel, useBareRelationLabels, useRelatedDisplayFields } from "../../lib/relationOptions";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
 import { canDo, type Schema, type SchemaField } from "../../lib/schema";
 import { createSchemaColumns, toOneRelationFields, withRelationIncludes } from "../../lib/schemaColumns";
@@ -139,9 +139,10 @@ function CrudRelationTable({
   );
   const relationFields = useMemo(() => toOneRelationFields(schema).filter((field) => field.name !== backFilter), [schema, backFilter]);
   const displayFields = useRelatedDisplayFields(relationFields, request);
+  const [bareLabels, setLabelledRows] = useBareRelationLabels(relationFields, request);
   const schemaColumns = useMemo(
-    () => createSchemaColumns<Row>(schema, displayFields).filter((column) => column.key !== backFilter),
-    [schema, backFilter, displayFields],
+    () => createSchemaColumns<Row>(schema, displayFields, bareLabels).filter((column) => column.key !== backFilter),
+    [schema, backFilter, displayFields, bareLabels],
   );
 
   function changed() {
@@ -242,6 +243,7 @@ function CrudRelationTable({
     defaultPageSize: 10,
     searchable: Boolean(schema.searchable),
   });
+  useEffect(() => setLabelledRows(table.items), [table.items, setLabelledRows]);
 
   const singular = schema.label ?? "item";
   const plural = schema.label_plural ?? relation.label.toLowerCase();

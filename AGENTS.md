@@ -801,8 +801,12 @@ A to-one relation column shows the related row's `display_field`, not
 its id: list tables (`CrudListScreen` and a detail page's relation tabs)
 fetch with `?include[]=<to-one relations>` (`withRelationIncludes`), so
 each such relation arrives as its nested row, and label it with the
-related schema's `display_field` (`useRelatedDisplayFields`). A plain
-uuid column with no model relation (e.g. `org_id`) still shows the id.
+related schema's `display_field` (`useRelatedDisplayFields`). A bare
+cross-module id (`Meta.related_endpoints`, schema `related_model: null`,
+e.g. a goal's `org_id`) can't be sideloaded, so `useBareRelationLabels`
+looks up the ids on screen with one `GET <endpoint>?filter{id.in}=...`
+per related endpoint and labels them the same way; an id the caller
+can't see stays an id.
 
 ### Relationships - detail screen, 1-n CRUD, n-n link
 

@@ -32,6 +32,13 @@ describe("createSchemaColumns", () => {
     expect(goal?.render?.({ goal: null })).toBe("—");
   });
 
+  it("labels a bare cross-module id from the looked-up labels", () => {
+    const owner = { name: "org_id", type: "relation", required: false, read_only: false, label: "Org", many: false, related_model: null, related_endpoint: "/api/v1/orgs" } as const;
+    const column = createSchemaColumns({ fields: [owner] }, {}, { "/api/v1/orgs/o1": "Acme" })[0];
+    expect(column.render?.({ org_id: "o1" })).toBe("Acme");
+    expect(column.render?.({ org_id: "o2" })).toBe("o2");
+  });
+
   it("leaves out id and to-many relations", () => {
     expect(createSchemaColumns(SCHEMA).map((column) => column.key)).toEqual(["name", "goal", "org"]);
   });

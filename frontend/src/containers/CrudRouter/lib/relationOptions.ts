@@ -104,3 +104,63 @@ export function useRelatedDisplayFields(fields: SchemaField[], request: BaseApiR
 
   return displayFields;
 }
+
+/**
+ * Labels for to-one relations stored as a bare id of another module's
+ * resource (`Meta.related_endpoints`, schema `related_model: null` - e.g. a
+ * goal's `org_id`), which `?include[]=` can't sideload. Keyed
+ * `"<related_endpoint>/<id>"`: one `GET <endpoint>?filter{id.in}=...` per
+ * endpoint for the ids on screen not labelled yet, labelled with that
+ * schema's `display_field`. A failed lookup leaves the bare id showing.
+ * Returns the labels and a setter for the rows on screen - the columns
+ * using the labels are built before the table that loads those rows.
+ */
+export function useBareRelationLabels(
+  fields: SchemaField[],
+  request: BaseApiRequest,
+): [Record<string, string>, (rows: readonly unknown[]) => void] {
+  const [labels, setLabels] = useState<Record<string, string>>({});
+  const [rows, setRows] = useState<readonly unknown[]>([]);
+  const missing = useMemo(() => {
+    const byEndpoint = new Map<string, Set<string>>();
+    for (const field of fields) {
+      if (field.type !== "relation" || field.many || field.related_model != null || !field.related_endpoint) continue;
+      for (const row of rows) {
+        const value = (row as Record<string, unknown>)[field.name];
+        if (value == null || value === "" || typeof value === "object") continue;
+        const id = String(value);
+        if (`${field.related_endpoint}/${id}` in labels) continue;
+        const ids = byEndpoint.get(field.related_endpoint) ?? new Set<string>();
+        ids.add(id);
+        byEndpoint.set(field.related_endpoint, ids);
+      }
+    }
+    return [...byEndpoint].map(([endpoint, ids]) => [endpoint, [...ids].sort()] as const);
+  }, [fields, rows, labels]);
+  const missingKey = JSON.stringify(missing);
+
+  useEffect(() => {
+    let cancelled = false;
+    for (const [endpoint, ids] of missing) {
+      const query = new URLSearchParams({ "filter{id.in}": ids.join(","), page_size: String(ids.length) });
+      Promise.all([loadSchema(endpoint, request), request<DataTablePage<Record<string, unknown>>>(`${endpoint}?${query}`)])
+        .then(([schema, page]) => {
+          if (cancelled) return;
+          setLabels((prev) => {
+            const next = { ...prev };
+            // An id the caller can't see stays unlabelled (and isn't asked for again).
+            for (const id of ids) next[`${endpoint}/${id}`] = id;
+            for (const row of page.items) next[`${endpoint}/${String(row.id)}`] = rowLabel(row, schema.display_field);
+            return next;
+          });
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `missingKey` stands for `missing`
+  }, [missingKey, request]);
+
+  return [labels, setRows];
+}

@@ -7,7 +7,7 @@ import { createBaseApi } from "../../lib/baseApi";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
 import { describeCondition, filterParams, type FilterCondition } from "../../lib/filters";
 import { createCrudPaths } from "../../lib/paths";
-import { rowLabel, useRelatedDisplayFields } from "../../lib/relationOptions";
+import { rowLabel, useBareRelationLabels, useRelatedDisplayFields } from "../../lib/relationOptions";
 import { createRequest } from "../../lib/request";
 import { canDo, type Schema } from "../../lib/schema";
 import { createSchemaColumns, toOneRelationFields, withRelationIncludes } from "../../lib/schemaColumns";
@@ -186,7 +186,8 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
 
   const relationFields = useMemo(() => toOneRelationFields(schema), [schema]);
   const displayFields = useRelatedDisplayFields(relationFields, request);
-  const schemaColumns = useMemo(() => createSchemaColumns<T>(schema, displayFields), [schema, displayFields]);
+  const [bareLabels, setLabelledRows] = useBareRelationLabels(relationFields, request);
+  const schemaColumns = useMemo(() => createSchemaColumns<T>(schema, displayFields, bareLabels), [schema, displayFields, bareLabels]);
 
   async function handleDelete(row: T) {
     if (!window.confirm("Delete this item?")) return;
@@ -255,6 +256,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
   // Only where `?q=` actually searches something (the schema says so).
   const showSearch = searchable !== false && Boolean(schema.searchable);
   const table = useDataTable({ endpoint: withRelationIncludes(baseApi.endpoint, schema), columns, rowKey, fetcher: baseApi.list, searchable: showSearch });
+  useEffect(() => setLabelledRows(table.items), [table.items, setLabelledRows]);
 
   function applyFilters(next: FilterCondition[]) {
     setConditions(next);
