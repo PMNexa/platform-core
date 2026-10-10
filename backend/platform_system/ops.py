@@ -9,7 +9,14 @@ from django.utils import timezone
 
 from core_api.system import usage_providers
 
-from platform_system.models import DeliveryAttempt, EmailStatus, JobHeartbeat, OutgoingEmail
+from platform_system.models import (
+    DeliveryAttempt,
+    EmailStatus,
+    JobHeartbeat,
+    OutgoingEmail,
+    Suppression,
+    SuppressionReason,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +60,15 @@ def status() -> dict:
     emails = OutgoingEmail.objects.filter(created_at__gte=day).aggregate(
         sent=Count("id", filter=Q(status=EmailStatus.SENT)),
         failed=Count("id", filter=Q(status=EmailStatus.FAILED)),
+        suppressed=Count("id", filter=Q(status=EmailStatus.SUPPRESSED)),
     )
     emails["queued"] = OutgoingEmail.objects.filter(status=EmailStatus.QUEUED).count()
+    # From SES (bounces, complaints) - see platform_system.ses.
+    emails.update(Suppression.objects.filter(created_at__gte=day).aggregate(
+        bounces=Count("id", filter=Q(reason=SuppressionReason.BOUNCE)),
+        complaints=Count("id", filter=Q(reason=SuppressionReason.COMPLAINT)),
+    ))
+    emails["suppressed_total"] = Suppression.objects.count()
     notifications = DeliveryAttempt.objects.filter(created_at__gte=day).aggregate(
         sent=Count("id", filter=Q(ok=True)), failed=Count("id", filter=Q(ok=False))
     )

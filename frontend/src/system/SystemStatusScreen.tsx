@@ -121,6 +121,20 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
                 tone={status.notifications_24h.failed ? "text-danger" : ""}
               />
             </div>
+            <div className="row g-3 mt-1">
+              <Stat label="Hard bounces" value={status.emails_24h.bounces} tone={status.emails_24h.bounces ? "text-warning" : ""} />
+              <Stat
+                label="Spam complaints"
+                value={status.emails_24h.complaints}
+                tone={status.emails_24h.complaints ? "text-danger" : ""}
+              />
+              <Stat label="Not sent (suppressed)" value={status.emails_24h.suppressed} />
+              <Stat label="Suppressed addresses" value={status.emails_24h.suppressed_total} />
+            </div>
+            <div className="small text-secondary mt-2">
+              Bounces and complaints come from Amazon SES (the <code>email.ses_*</code> settings); a bounced or
+              complaining address gets no more mail until it's removed from the suppression list.
+            </div>
             {status.emails_24h.queued > 0 && (
               <div className="small text-secondary mt-2">{status.emails_24h.queued} email(s) waiting to be retried.</div>
             )}

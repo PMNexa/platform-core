@@ -34,7 +34,17 @@ export interface SystemStatus {
     failures: number;
     state: "ok" | "failing" | "stopped";
   }[];
-  emails_24h: { sent: number; failed: number; queued: number };
+  emails_24h: {
+    sent: number;
+    failed: number;
+    queued: number;
+    /** Not sent: every recipient was on the suppression list. */
+    suppressed: number;
+    /** Added to the suppression list from Amazon SES (platform_system/ses.py). */
+    bounces: number;
+    complaints: number;
+    suppressed_total: number;
+  };
   notifications_24h: { sent: number; failed: number };
   usage: InfoGroup[];
 }

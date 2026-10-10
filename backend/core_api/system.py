@@ -156,27 +156,75 @@ def email_configured() -> bool:
     return bool(getattr(settings, "EMAIL_CONFIGURED", False))
 
 
+#: Mail that is always sent (verification, password reset, security):
+#: no preference, no unsubscribe link. Suppressed addresses still get none.
+ACCOUNT_MAIL = "account"
+
+
+@dataclass(frozen=True)
+class EmailCategory:
+    """A kind of email a user can turn off (Email preferences, the
+    unsubscribe page): `send_email(..., category=key)` checks the user's
+    choice (missing = `default`) and adds the one-click unsubscribe headers
+    and footer. Account mail has no category."""
+
+    key: str
+    label: str
+    help: str = ""
+    default: bool = True
+    order: int = 100
+
+
+_email_categories: dict[str, EmailCategory] = {}
+
+
+def register_email_category(category: EmailCategory) -> None:
+    _email_categories[category.key] = category
+
+
+def email_categories() -> list[EmailCategory]:
+    return sorted(_email_categories.values(), key=lambda c: (c.order, c.label))
+
+
+def email_category(key: str) -> EmailCategory | None:
+    return _email_categories.get(key)
+
+
+def public_url(path: str = "") -> str:
+    """An absolute link to this instance (`settings.PUBLIC_URL`), for mail
+    sent outside a request; "" when it isn't set."""
+    base = (getattr(settings, "PUBLIC_URL", "") or "").rstrip("/")
+    return f"{base}{path}" if base else ""
+
+
 def send_email(to: str | list[str], subject: str, text: str, *, html: str | None = None, kind: str = "",
-               user_id=None) -> None:
+               user_id=None, category: str = ACCOUNT_MAIL, headers: dict | None = None) -> bool:
     """Sends an email - through `platform_system`'s outbox when installed
     (stored, sent right after the current transaction commits, retried by
     `run_system_jobs`), else directly. Never raises for a delivery
-    failure; an unconfigured instance just logs it."""
+    failure; an unconfigured instance just logs it.
+
+    With `platform_system`, nothing goes to a suppressed address (a hard
+    bounce or complaint), and a `category` other than account mail is only
+    sent to `user_id` if they haven't turned it off - it then carries
+    `List-Unsubscribe` headers and an unsubscribe footer. Returns whether
+    it was queued (False: suppressed or opted out)."""
     recipients = [to] if isinstance(to, str) else list(to)
     if apps.is_installed(SYSTEM_APP):
         from platform_system.mail import queue
 
-        queue(recipients, subject, text, html=html, kind=kind, user_id=user_id)
-        return
+        return queue(recipients, subject, text, html=html, kind=kind, user_id=user_id, category=category,
+                     headers=headers) is not None
     from django.core.mail import EmailMultiAlternatives
 
-    message = EmailMultiAlternatives(subject, text, to=recipients)
+    message = EmailMultiAlternatives(subject, text, to=recipients, headers=headers)
     if html:
         message.attach_alternative(html, "text/html")
     try:
         message.send()
     except Exception:
         logger.exception("Sending %s email failed", kind or "an")
+    return True
 
 
 def run_system_jobs() -> dict:
@@ -422,6 +470,27 @@ def active_user_count(days: int) -> int | None:
     from platform_system.insights import active_users, today
 
     return active_users(today(), days)
+
+
+def last_seen(user_ids) -> dict[str, Any]:
+    """`{user_id: last_seen_at}` for those of `user_ids` ever seen."""
+    if not apps.is_installed(SYSTEM_APP):
+        return {}
+    from platform_system.models import UserPresence
+
+    rows = UserPresence.objects.filter(user_id__in=[str(u) for u in user_ids])
+    return dict(rows.values_list("user_id", "last_seen_at"))
+
+
+def users_last_seen_between(start, end) -> list[tuple[str, Any]]:
+    """`[(user_id, last_seen_at)]` of users last active in `[start, end)` -
+    e.g. the ones who went quiet a week ago."""
+    if not apps.is_installed(SYSTEM_APP):
+        return []
+    from platform_system.models import UserPresence
+
+    rows = UserPresence.objects.filter(last_seen_at__gte=start, last_seen_at__lt=end)
+    return list(rows.values_list("user_id", "last_seen_at"))
 
 
 def counted(kind: str, day) -> tuple[int, int]:

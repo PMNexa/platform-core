@@ -5,9 +5,11 @@ import { createCrudRoutes, prefixRoutes, routeFilePath, type RouteEntry } from "
 /**
  * The system admin's pages, under a HOST-chosen mount
  * (`createSystemRoutes("system")`): `settings` (SystemSettingsScreen),
- * `status`, `insights` (SystemInsightsScreen),
- * `audit-events` and `outgoing-emails` (the audit log and the email
- * delivery log - generic, schema-driven lists with search and filters).
+ * `status`, `insights` (SystemInsightsScreen), `lifecycle`
+ * (SystemLifecycleScreen), `audit-events`, `outgoing-emails`,
+ * `lifecycle-emails` and `email-suppressions` (the audit log, the email
+ * delivery log, every lifecycle email, the suppression list - generic,
+ * schema-driven lists with search and filters).
  * Browser-safe like every route builder here.
  */
 export function createSystemRoutes(basePath: string): RouteEntry[] {
@@ -28,10 +30,17 @@ export function createSystemRoutes(basePath: string): RouteEntry[] {
       path: `${base}/insights`,
       file: routeFilePath(import.meta.url, "../routes/system-insights.tsx"),
     },
+    {
+      id: "platform-system-lifecycle",
+      path: `${base}/lifecycle`,
+      file: routeFilePath(import.meta.url, "../routes/system-lifecycle.tsx"),
+    },
     ...prefixRoutes(base, [
       ...createCrudRoutes("/api/v1/audit-events"),
       ...createCrudRoutes("/api/v1/outgoing-emails"),
       ...createCrudRoutes("/api/v1/delivery-attempts"),
+      ...createCrudRoutes("/api/v1/lifecycle-emails"),
+      ...createCrudRoutes("/api/v1/email-suppressions"),
     ]),
   ];
 }
@@ -56,6 +65,8 @@ export function createSystemNavItems(basePath: string, extra: NavItem[] = []): N
         { label: "Audit log", to: `${base}/audit-events`, permission: "audit-events.view" },
         { label: "Email log", to: `${base}/outgoing-emails`, permission: "outgoing-emails.view" },
         { label: "Notification log", to: `${base}/delivery-attempts`, permission: "delivery-attempts.view" },
+        { label: "Lifecycle email", to: `${base}/lifecycle`, permission: "lifecycle-emails.view" },
+        { label: "Suppressed addresses", to: `${base}/email-suppressions`, permission: "email-suppressions.view" },
       ],
     },
   ];

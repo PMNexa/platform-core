@@ -19,3 +19,10 @@ export { createSystemNavItems, createSystemRoutes } from "./system/routes";
 export { default as SystemStatusScreen } from "./system/SystemStatusScreen";
 export { default as SystemInsightsScreen } from "./system/SystemInsightsScreen";
 export { default as AnnouncementBanner } from "./system/AnnouncementBanner";
+// Email preferences (signed in), the unsubscribe page (signed out), and
+// lifecycle email's console page and per-user panel.
+export { createEmailPublicRoutes, createEmailRoutes } from "./email/routes";
+export { default as EmailPreferencesScreen } from "./email/EmailPreferencesScreen";
+export { default as UnsubscribeScreen } from "./email/UnsubscribeScreen";
+export { default as SystemLifecycleScreen } from "./lifecycle/SystemLifecycleScreen";
+export { default as UserLifecyclePanel } from "./lifecycle/UserLifecyclePanel";

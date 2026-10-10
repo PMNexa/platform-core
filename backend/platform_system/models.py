@@ -45,6 +45,8 @@ class EmailStatus(models.TextChoices):
     QUEUED = "queued", "Queued"
     SENT = "sent", "Sent"
     FAILED = "failed", "Failed"
+    #: Not sent: every recipient is on the suppression list.
+    SUPPRESSED = "suppressed", "Suppressed"
 
 
 class OutgoingEmail(models.Model):
@@ -66,6 +68,10 @@ class OutgoingEmail(models.Model):
     next_attempt_at = models.DateTimeField(default=timezone.now)
     last_error = models.TextField(blank=True, default="")
     sent_at = models.DateTimeField(null=True, blank=True)
+    #: The email category it was sent under ("" = account mail, always sent).
+    category = models.CharField(max_length=32, blank=True, default="", db_default="")
+    #: Extra headers (List-Unsubscribe, ...); null on older rows.
+    headers = models.JSONField(null=True, blank=True)
 
     class Meta:
         db_table = "outgoing_email"
@@ -166,3 +172,45 @@ class EventCount(models.Model):
         db_table = "event_count"
         constraints = [models.UniqueConstraint(fields=["date", "kind", "key"], name="event_count_unique")]
         indexes = [models.Index(fields=["kind", "date"])]
+
+
+class SuppressionReason(models.TextChoices):
+    BOUNCE = "bounce", "Hard bounce"
+    COMPLAINT = "complaint", "Complaint"
+    MANUAL = "manual", "Added by an admin"
+
+
+class Suppression(models.Model):
+    """An address nothing is sent to any more - not even account mail:
+    it bounced for good or its owner marked a message as spam (from SES
+    through SNS, `platform_system.ses`), or an admin added it. Every
+    `send_email` checks it. Removing the row lets mail through again."""
+
+    id = models.UUIDField(primary_key=True, default=generate_uuid7, editable=False)
+    email = models.EmailField(max_length=255, unique=True)
+    reason = models.CharField(max_length=16, choices=SuppressionReason.choices, default=SuppressionReason.MANUAL)
+    #: Where it came from - the bounce's diagnostic, "admin", ...
+    detail = models.CharField(max_length=500, blank=True, default="")
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        db_table = "email_suppression"
+        verbose_name = "suppressed address"
+        verbose_name_plural = "suppressed addresses"
+
+    def __str__(self):
+        return self.email
+
+
+class EmailPreference(models.Model):
+    """A user's choice for one email category (`core_api.system.EmailCategory`);
+    no row = the category's default. A bare user id."""
+
+    user_id = models.CharField(max_length=64)
+    category = models.CharField(max_length=32)
+    enabled = models.BooleanField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "email_preference"
+        constraints = [models.UniqueConstraint(fields=["user_id", "category"], name="email_preference_unique")]
