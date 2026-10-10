@@ -974,6 +974,36 @@ of returning the error it was actually trying to report. Grep every
 `settings.py` across the platform for `EXCEPTION_HANDLER` after touching
 this file's exception handler name.
 
+## OpenAPI (`core_api/openapi.py`) - API reference for every `BaseViewSet`
+
+drf-spectacular is a dependency of this package, so every module can use
+`@extend_schema` and its extensions. The how-to for module authors is
+GoalNexa's `docs/api-reference.md`; this is the mechanics. A host sets
+`REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "core_api.openapi.PlatformAutoSchema"`
+and mounts spectacular's views (main: `/api/v1/schema`, `/api/v1/docs`,
+`/api/v1/redoc`). It describes once what spectacular can't see:
+`include[]`/`exclude[]` (with the expandable names as an enum),
+`?filter{field}=` (a templated parameter NAME, which OpenAPI can't
+express - so it's prose in each list operation's description, listing the
+fields), `DynamicRelationField` (`oneOf` id / the related component), the
+`{items, total, page, page_size}` envelope (`EnvelopePageNumberPagination.
+get_paginated_response_schema`, a plain DRF hook), the `schema`/`link`/
+`unlink` actions, and `Error` (`{code, message, field_errors}`) on 4xx
+responses guessed from the view. The generic actions get generated
+one-line descriptions - their docstrings (and the viewset's class
+docstring, spectacular's fallback) are developer notes. Two view
+attributes, both read only here: `openapi_auth` (`{name: security
+scheme}`, for a view that checks a credential itself with
+`authentication_classes = []`) and `openapi_errors` (the error statuses,
+when the guess is wrong). Core describes no authentication class - each
+module that owns one registers an `OpenApiAuthenticationExtension`.
+
+**The `schema` action's method is `resource_schema`** (`url_path=
+"schema"`, so the URL is unchanged): a method named `schema` shadows
+DRF's `APIView.schema` - the view's OpenAPI generator - and spectacular
+refuses the whole document. Access policies see the action as
+`resource_schema` (`_ACTION_VERBS`).
+
 ## Access policy (`core_api/access.py`) - authorization hook
 
 `CORE_API_ACCESS_POLICY` (a dotted path, optional) names a class every

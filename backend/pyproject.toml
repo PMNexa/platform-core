@@ -13,6 +13,9 @@ dependencies = [
     "uuid6>=2024.1.12",
     "pyyaml>=6.0",
     "pydantic>=2.0",
+    # OpenAPI 3 (core_api/openapi.py) - modules annotate their views with
+    # its @extend_schema, so it's everyone's dependency, not the host's.
+    "drf-spectacular>=0.28",
 ]
 
 [project.optional-dependencies]

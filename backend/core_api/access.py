@@ -48,7 +48,7 @@ VERBS = (VIEW, CREATE, UPDATE, DELETE)
 _ACTION_VERBS = {
     "list": VIEW,
     "retrieve": VIEW,
-    "schema": VIEW,
+    "resource_schema": VIEW,  # GET <resource>/schema
     "create": CREATE,
     "update": UPDATE,
     "partial_update": UPDATE,

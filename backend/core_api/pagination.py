@@ -35,3 +35,16 @@ class EnvelopePageNumberPagination(PageNumberPagination):
                 "page_size": self.get_page_size(self.request),
             }
         )
+
+    def get_paginated_response_schema(self, schema):
+        # What OpenAPI generators (drf-spectacular) show for a list response.
+        return {
+            "type": "object",
+            "required": ["items", "total", "page", "page_size"],
+            "properties": {
+                "items": schema,
+                "total": {"type": "integer", "description": "Rows matching the query, on every page."},
+                "page": {"type": "integer"},
+                "page_size": {"type": "integer"},
+            },
+        }

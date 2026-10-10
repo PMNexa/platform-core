@@ -107,7 +107,7 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
         # AGENTS.md's "no cross-module DB access" rule and `Goal.org_id`'s
         # own docstring), so `_field_type` above already reported it as a
         # plain "string". A serializer's own `Meta.related_endpoints`
-        # (see `BaseViewSet.schema`) is what tags it as a relation anyway,
+        # (see `BaseViewSet.resource_schema`) is what tags it as a relation anyway,
         # purely for the frontend picker's sake - `related_model` stays
         # `None` (there's no local model class to name; a cross-module
         # import here is exactly what the rule forbids), `many` is always
@@ -278,8 +278,10 @@ class BaseViewSet(ModelViewSet):
         to_prefetch = [name for name in included if name in prefetchable]
         return queryset.prefetch_related(*to_prefetch) if to_prefetch else queryset
 
-    @action(detail=False, methods=["get"])
-    def schema(self, request):
+    # Not named `schema`: that would shadow DRF's `APIView.schema` (the
+    # view's OpenAPI generator - see core_api/openapi.py).
+    @action(detail=False, methods=["get"], url_path="schema", url_name="schema")
+    def resource_schema(self, request):
         """`GET <resource>/schema` - every field this resource's serializer
         can emit, machine-readable enough for a generic CRUD builder to
         derive a form/column/relation-picker config from instead of one

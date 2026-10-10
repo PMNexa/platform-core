@@ -1,4 +1,4 @@
-"""Tiny model -> API endpoint registry, so `BaseViewSet.schema()` can tell
+"""Tiny model -> API endpoint registry, so `BaseViewSet.resource_schema()` can tell
 a relation field's frontend picker where to fetch its OWN rows from (e.g.
 `parent`'s `related_model` is `"Goal"` - this is what turns that into
 `"/api/v1/goals"`, see `viewsets.py`'s `_describe_field`). A plural
