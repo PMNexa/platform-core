@@ -35,11 +35,17 @@ export type { FormLabelProps } from "./atoms/FormLabel";
 export { default as FormControl } from "./atoms/FormControl";
 export type { FormControlProps } from "./atoms/FormControl";
 
+export { default as FormSelect } from "./atoms/FormSelect";
+export type { FormSelectProps, FormSelectSize } from "./atoms/FormSelect";
+
 export { default as CodeBlock } from "./molecules/CodeBlock";
 export type { CodeBlockProps } from "./molecules/CodeBlock";
 
 export { default as FormCheck } from "./molecules/FormCheck";
 export type { FormCheckProps } from "./molecules/FormCheck";
+
+export { default as SegmentedControl } from "./molecules/SegmentedControl";
+export type { SegmentedControlProps, SegmentedOption } from "./molecules/SegmentedControl";
 
 export { default as SidebarNavItem } from "./molecules/SidebarNavItem";
 export { default as SidebarNavGroup } from "./molecules/SidebarNavGroup";

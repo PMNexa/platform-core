@@ -274,6 +274,16 @@ def session_providers() -> list[SessionProvider]:
 #: modules drop what they keep under its bare id (goals, cycles, ...).
 org_removed = Signal()
 
+#: Sent BEFORE a team (platform-org) is deleted: `team_id`, `org_id`,
+#: `parent_id` (where its sub-teams and members' work move, or None for a
+#: top-level team) and `instances` - "move" (what a module files under the
+#: team moves to `parent_id`) or "archive" (it's archived).
+team_removed = Signal()
+
+#: Sent AFTER a team is created, moved or renamed: `team_id`, `org_id` -
+#: e.g. goalnexa recomputes the totals that follow the team tree.
+team_changed = Signal()
+
 
 # --- operations: scheduler heartbeats, delivery log, usage ----------------
 
