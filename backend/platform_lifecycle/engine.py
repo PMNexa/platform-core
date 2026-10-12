@@ -59,7 +59,9 @@ NOT_READY_LIMIT = timedelta(days=7)
 CAP_WINDOW = timedelta(days=7)
 SCAN_EVERY = 30 * 60
 
-_last_scan = 0.0
+# When this process last scanned (time.monotonic()); None = not yet, so the
+# first run always scans - monotonic() starts near 0 on a fresh host.
+_last_scan: float | None = None
 
 
 def _setting(key: str, fallback):
@@ -107,7 +109,7 @@ def enroll(journey: Journey, user_id: str, key: str, data: dict, now: datetime) 
 
 def scan(now: datetime, *, force: bool = False) -> int:
     global _last_scan
-    if not force and time.monotonic() - _last_scan < SCAN_EVERY:
+    if not force and _last_scan is not None and time.monotonic() - _last_scan < SCAN_EVERY:
         return 0
     _last_scan = time.monotonic()
     entered = 0
