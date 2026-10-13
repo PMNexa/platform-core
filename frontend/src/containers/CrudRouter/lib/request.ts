@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { BaseApiRequest } from "./baseApi";
+import { RequestError } from "./requestError";
 
 /**
  * A `BaseApiRequest` (see `baseApi.ts`) backed by axios. The name stays
@@ -25,8 +26,8 @@ export function createRequest(accessToken: string, baseURL = ""): BaseApiRequest
       return response.data;
     } catch (thrown) {
       if (axios.isAxiosError(thrown)) {
-        const body = thrown.response?.data as { message?: string } | undefined;
-        throw new Error(body?.message ?? thrown.message);
+        const body = thrown.response?.data as { message?: string; field_errors?: Record<string, string[]> | null } | undefined;
+        throw new RequestError(body?.message ?? thrown.message, body?.field_errors ?? null);
       }
       throw thrown;
     }

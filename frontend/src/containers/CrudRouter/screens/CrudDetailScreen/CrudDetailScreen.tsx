@@ -19,6 +19,7 @@ import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
 import CrudRelationSection from "../CrudRelationSection";
+import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 type Row = Record<string, unknown>;
 
@@ -372,10 +373,10 @@ function DetailEditForm({
   return (
     <form onSubmit={handleSubmit} noValidate>
       <CardBody>
-        <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} />
+        <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
         {form.error && (
           <p className="text-danger mb-0" role="alert">
-            {form.error.message}
+            {formErrorMessage(form.error, fields)}
           </p>
         )}
       </CardBody>

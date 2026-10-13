@@ -13,10 +13,17 @@ function Hint({ text }: { text?: string }) {
   return text ? <small className="form-hint">{text}</small> : null;
 }
 
+/** The server's reason this field was refused (`errors`). */
+function FieldError({ messages }: { messages?: string[] }) {
+  return messages?.length ? <div className="invalid-feedback d-block">{messages.join(" ")}</div> : null;
+}
+
 export interface CrudFormFieldsProps<T> {
   fields: CrudField<T>[];
   values: Partial<T>;
   onChange: <K extends keyof T>(key: K, value: T[K]) => void;
+  /** The server's per-field reasons from a refused save (`fieldErrorsOf(form.error)`), shown under each field. */
+  errors?: Record<string, string[]>;
 }
 
 /**
@@ -38,7 +45,7 @@ export interface CrudFormFieldsProps<T> {
  * `nullable`, otherwise drops it (server default applies - see
  * `CrudField.nullable`).
  */
-function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>) {
+function CrudFormFields<T>({ fields, values, onChange, errors }: CrudFormFieldsProps<T>) {
   return (
     <>
       {fields.map((field) => {
@@ -51,6 +58,7 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
                 checked={Boolean(values[field.key])}
                 onChange={(event) => onChange(field.key, event.target.checked as T[typeof field.key])}
               />
+              <FieldError messages={errors?.[field.key]} />
             </div>
           );
         }
@@ -92,6 +100,7 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
                 ))}
               </select>
               <Hint text={field.helpText} />
+              <FieldError messages={errors?.[field.key]} />
             </div>
           );
         }
@@ -111,6 +120,7 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
                 onChange={(event) => onChange(field.key, event.target.value as T[typeof field.key])}
               />
               <Hint text={field.helpText} />
+              <FieldError messages={errors?.[field.key]} />
             </div>
           );
         }
@@ -135,6 +145,7 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
                 }}
               />
               <Hint text={field.helpText} />
+              <FieldError messages={errors?.[field.key]} />
             </div>
           );
         }
@@ -156,6 +167,7 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
               }}
             />
             <Hint text={field.helpText} />
+              <FieldError messages={errors?.[field.key]} />
           </div>
         );
       })}

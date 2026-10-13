@@ -7,6 +7,7 @@ import { useRelationFields } from "../../lib/relationOptions";
 import type { CrudField } from "../../lib/types";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
+import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 type Row = Record<string, unknown>;
 
@@ -98,10 +99,10 @@ function CrudFormModalBody({ title, fields: baseFields, request, load, submitLab
       )}
       {!loading && !loadError && (
         <form id={formId} onSubmit={handleSubmit} noValidate>
-          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} />
+          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
           {form.error && (
             <p className="text-danger mb-0" role="alert">
-              {form.error.message}
+              {formErrorMessage(form.error, fields)}
             </p>
           )}
         </form>

@@ -13,6 +13,7 @@ import { loadSchema } from "../../lib/schemaCache";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
+import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 type Row = Record<string, unknown>;
 
@@ -156,12 +157,12 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
         )}
         {throughFields.length > 0 && (
           <Fieldset legend="Link details" className="mt-3 mb-0">
-            <CrudFormFields fields={throughFields} values={form.values} onChange={form.setValue} />
+            <CrudFormFields fields={throughFields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
           </Fieldset>
         )}
         {form.error && (
           <p className="text-danger mb-0" role="alert">
-            {form.error.message}
+            {formErrorMessage(form.error, throughFields)}
           </p>
         )}
       </form>
