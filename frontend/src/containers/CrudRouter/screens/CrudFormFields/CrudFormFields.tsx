@@ -58,6 +58,9 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
         const fieldId = `crud-field-${field.key}`;
 
         if (field.type === "select") {
+          // A choice whose value is "" ("Any time", "Every check-in counts") is a real value -
+          // sent as "" (not null) and no extra "None" option next to it.
+          const hasBlank = field.options?.some((option) => option.value === "") ?? false;
           return (
             <div key={field.key} className="mb-3">
               <FormLabel htmlFor={fieldId} required={field.required}>
@@ -67,13 +70,21 @@ function CrudFormFields<T>({ fields, values, onChange }: CrudFormFieldsProps<T>)
                 id={fieldId}
                 className="form-select form-select-sm"
                 required={field.required}
-                value={(values[field.key] as string | undefined) ?? ""}
-                onChange={(event) => onChange(field.key, (event.target.value || null) as T[typeof field.key])}
+                value={
+                  values[field.key] === undefined
+                    ? (field.defaultValue ?? "")
+                    : ((values[field.key] as string | null) ?? "")
+                }
+                onChange={(event) =>
+                  onChange(field.key, (event.target.value || (hasBlank ? "" : null)) as T[typeof field.key])
+                }
               >
                 {/* Only disabled when required - an optional select (e.g. an optional parent/relation) needs this as a real, re-selectable choice, not just an unpicked placeholder, so a caller can clear a previous selection back to "none". */}
-                <option value="" disabled={field.required}>
-                  {field.required ? "Select…" : "None"}
-                </option>
+                {!hasBlank && (
+                  <option value="" disabled={field.required}>
+                    {field.required ? "Select…" : "None"}
+                  </option>
+                )}
                 {field.options?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

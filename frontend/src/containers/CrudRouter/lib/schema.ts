@@ -32,6 +32,8 @@ export interface SchemaField {
   help_text?: string;
   /** Only present on a `ChoiceField` (e.g. a model's `TextChoices` status). */
   choices?: SchemaFieldChoice[];
+  /** Only on a `ChoiceField` whose default is known - what a new row gets when the field is left out. */
+  default?: string;
   /** Only present when `type === "relation"`. */
   many?: boolean;
   related_model?: string | null;

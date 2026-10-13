@@ -51,6 +51,23 @@ def _field_type(field) -> str:
     return "string"
 
 
+def _choice_default(field, model) -> str | None:
+    """What a new row gets when a choice field is left out: the field's
+    `initial` (a serializer-declared field sets it), else the model field's
+    plain default - so a form can show it preselected. None = unknown."""
+    if field.initial not in (None, ""):
+        default = field.initial
+    else:
+        try:
+            model_field = model._meta.get_field(field.source) if model is not None else None
+        except Exception:  # noqa: BLE001 - "*" sources, properties, ...
+            model_field = None
+        if model_field is None or not model_field.has_default() or callable(model_field.default):
+            return None
+        default = model_field.default
+    return default if default in field.choices else None
+
+
 def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: str | None = None, model=None) -> dict:
     description = {
         "name": name,
@@ -79,6 +96,9 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
         description["help_text"] = str(help_text)
     if isinstance(field, drf_serializers.ChoiceField):
         description["choices"] = [{"value": value, "label": str(label)} for value, label in field.choices.items()]
+        default = _choice_default(field, model)
+        if default is not None:
+            description["default"] = default
     if isinstance(field, DynamicRelationField):
         related_serializer_class = field._resolve_serializer_class()
         related_model = getattr(getattr(related_serializer_class, "Meta", None), "model", None)

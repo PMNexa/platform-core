@@ -25,6 +25,8 @@ export interface CrudField<T> {
   autoComplete?: string;
   /** Only meaningful when `type === "select"` - the `<option>` list. Populated synchronously from a `SchemaField`'s own `choices` (an enum) by `createSchemaFields`; for a relation field (see `relatedEndpoint`) it starts empty and is filled in asynchronously by `CrudCreateForm`/`CrudEditForm` once `fetchRelationOptions` resolves. */
   options?: CrudFieldOption[];
+  /** Only on a `select` field - the choice a new row gets when it's left out (`SchemaField.default`), shown preselected until one is picked. Display only: an untouched field is still omitted, so the server's own default applies. */
+  defaultValue?: string;
   /** Only present on a relation `select` field - the related resource's own base URL (`SchemaField.related_endpoint`) `fetchRelationOptions` fetches `options` from. Its absence on a relation field (a related model with no `core_api.registry` entry) is why that field falls back to a bare text input instead - see `schemaFields.ts`. */
   relatedEndpoint?: string;
 }

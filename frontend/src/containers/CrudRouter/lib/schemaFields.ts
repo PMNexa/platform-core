@@ -66,6 +66,7 @@ export function createSchemaFields<T>(schema: Schema): CrudField<T>[] {
       nullable: field.nullable,
       ...(field.help_text ? { helpText: field.help_text } : {}),
       ...(type === "select" && field.choices ? { options: field.choices } : {}),
+      ...(type === "select" && field.default !== undefined ? { defaultValue: field.default } : {}),
       ...(type === "select" && field.type === "relation" && field.related_endpoint
         ? { options: [], relatedEndpoint: field.related_endpoint }
         : {}),
