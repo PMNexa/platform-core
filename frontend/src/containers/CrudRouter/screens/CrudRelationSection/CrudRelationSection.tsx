@@ -333,6 +333,7 @@ function CrudRelationTable({
         submitLabel={isManyToMany ? "Create and link" : "Create"}
         onSubmit={handleCreate}
         onClose={() => setModal(null)}
+        layout={schema.form_layout}
       />
       <CrudFormModal
         open={modal?.type === "edit"}
@@ -340,6 +341,7 @@ function CrudRelationTable({
         fields={rowFields}
         request={request}
         load={() => relatedApi.read(modal?.type === "edit" ? modal.id : "")}
+        layout={schema.form_layout}
         onSubmit={async (values) => {
           if (modal?.type !== "edit") return;
           await relatedApi.update(modal.id, values);

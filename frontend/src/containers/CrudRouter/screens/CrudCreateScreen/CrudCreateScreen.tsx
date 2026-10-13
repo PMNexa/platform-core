@@ -6,6 +6,7 @@ import { pickFieldValues } from "../../lib/fields";
 import { useRelationFields } from "../../lib/relationOptions";
 import { createRequest } from "../../lib/request";
 import type { Schema } from "../../lib/schema";
+import type { FormLayout } from "../../lib/types";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
@@ -17,6 +18,8 @@ export interface CrudCreateScreenProps<T> {
   accessToken: string;
   /** Fires after a successful create - typically the host navigates back to the list. Router-agnostic on purpose (see `createCrudRouter`'s docstring): this screen never navigates itself. */
   onCreated?: (row: T) => void;
+  /** Overrides the schema's `form_layout` (sections, order, show-when rules) for this screen. */
+  formLayout?: FormLayout;
 }
 
 /**
@@ -28,7 +31,7 @@ export interface CrudCreateScreenProps<T> {
  * same reason: a screen shouldn't render a form with the WRONG fields
  * (none, until schema arrives) even briefly.
  */
-function CrudCreateScreen<T>({ baseUrl, accessToken, onCreated }: CrudCreateScreenProps<T>) {
+function CrudCreateScreen<T>({ baseUrl, accessToken, onCreated, formLayout }: CrudCreateScreenProps<T>) {
   const request = useMemo(() => createRequest(accessToken), [accessToken]);
   const baseApi = useMemo(() => createBaseApi<T>(baseUrl, request), [baseUrl, request]);
   const [schema, setSchema] = useState<Schema | null>(null);
@@ -73,7 +76,7 @@ function CrudCreateScreen<T>({ baseUrl, accessToken, onCreated }: CrudCreateScre
       </Card>
     );
 
-  return <CrudCreateForm baseApi={baseApi} schema={schema} request={request} onCreated={onCreated} />;
+  return <CrudCreateForm baseApi={baseApi} schema={schema} request={request} onCreated={onCreated} formLayout={formLayout} />;
 }
 
 interface CrudCreateFormProps<T> extends Omit<CrudCreateScreenProps<T>, "baseUrl" | "accessToken"> {
@@ -90,7 +93,7 @@ interface CrudCreateFormProps<T> extends Omit<CrudCreateScreenProps<T>, "baseUrl
  * `CardFooter`) rather than living inside it, so the submit button in
  * the footer still triggers the same native form submission.
  */
-function CrudCreateForm<T>({ baseApi, schema, request, onCreated }: CrudCreateFormProps<T>) {
+function CrudCreateForm<T>({ baseApi, schema, request, onCreated, formLayout }: CrudCreateFormProps<T>) {
   const baseFields = useMemo(() => createSchemaFields<T>(schema), [schema]);
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<T>();
@@ -105,7 +108,7 @@ function CrudCreateForm<T>({ baseApi, schema, request, onCreated }: CrudCreateFo
     <form onSubmit={handleSubmit} noValidate>
       <Card>
         <CardBody>
-          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
+          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={formLayout ?? schema.form_layout} />
           {form.error && (
             <p className="text-danger mb-0" role="alert">
               {formErrorMessage(form.error, fields)}

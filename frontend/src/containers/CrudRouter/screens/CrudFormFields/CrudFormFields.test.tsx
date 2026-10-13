@@ -80,6 +80,33 @@ describe("CrudFormFields", () => {
     expect(select.querySelector('option[value=""]')).toBeDisabled();
   });
 
+  it("offers no re-selectable None on a select that refuses null (schema says nullable: false)", () => {
+    render(<CrudFormFields fields={[{ ...FIELDS[3], nullable: false }]} values={{}} onChange={vi.fn()} />);
+    const select = screen.getByLabelText("Plan") as HTMLSelectElement;
+    expect(select.querySelector('option[value=""]')).toBeDisabled();
+    expect(select.querySelector('option[value=""]')?.textContent).toBe("Select…");
+  });
+
+  it("lays fields out in sections, folds a collapsed one and hides a field whose rule fails", () => {
+    const { container } = render(
+      <CrudFormFields
+        fields={FIELDS}
+        values={{ plan: "free" }}
+        onChange={vi.fn()}
+        layout={[
+          { title: "Plan", fields: ["plan", { name: "seats", show_if: { field: "plan", in: ["pro"] } }] },
+          { title: "Advanced", collapsed: true, fields: ["active"] },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Plan", { selector: "legend" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Seats")).toBeNull();
+    expect(container.querySelector("details summary")?.textContent).toBe("Advanced");
+    expect(container.querySelector("details")?.hasAttribute("open")).toBe(false);
+    // Not named by the layout: still shown, after it.
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+  });
+
   describe("date/datetime fields", () => {
     interface Entry {
       when: string | null;

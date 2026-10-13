@@ -319,6 +319,12 @@ class BaseViewSet(ModelViewSet):
         No auth/permission bypass here - this action still goes through
         the viewset's own `permission_classes` like any other.
 
+        `form_layout` (only when the serializer's `Meta.form_layout` sets
+        one): how a generic form groups and orders the fields - a list of
+        `{"title", "description"?, "collapsed"?, "fields": [name | {"name",
+        "show_if": {"field", "in"?|"not_in"?}}]}` sections. Fields it doesn't
+        name still show, after it.
+
         Besides `fields`: `label`/`label_plural` (the model's
         `verbose_name`/`verbose_name_plural`), `display_field` (the field
         that names a row - see `_display_field`) and `searchable` (whether
@@ -343,8 +349,12 @@ class BaseViewSet(ModelViewSet):
             # default ("Target date", not "target_date").
             field.bind(field_name=name, parent=serializer)
         model = serializer.Meta.model
+        # How a generic form lays these fields out (sections, order,
+        # show-when rules) - the frontend's `FormLayout`. Optional.
+        form_layout = getattr(serializer.Meta, "form_layout", None)
         return Response(
             {
+                **({"form_layout": form_layout} if form_layout else {}),
                 # Resource-level description, so a generic UI never has
                 # to guess names from a URL or a row's shape.
                 "label": str(model._meta.verbose_name),

@@ -1,3 +1,5 @@
+import type { FormLayout } from "./types";
+
 /**
  * The shape `core_api.viewsets.BaseViewSet.schema` (`GET <resource>/schema`)
  * returns - see its own docstring (platform-core backend) for exactly
@@ -74,4 +76,6 @@ export interface Schema {
   /** What the caller may do here - the viewset serves it AND the host's access policy (e.g. RBAC) allows it somewhere. A UI hides the rest; absent = everything (see `canDo`). */
   can?: SchemaCapabilities;
   fields: SchemaField[];
+  /** The serializer's `Meta.form_layout`: sections, order and show-when rules for forms (see `FormLayout`). Absent = every field in order. */
+  form_layout?: FormLayout;
 }

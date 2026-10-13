@@ -5,6 +5,7 @@ import Breadcrumb from "../../../../components/organisms/Breadcrumb";
 import { Card, CardBody, CardFooter, CardHeader } from "../../../../components/organisms/Card";
 import { DefaultLink } from "../../../../components/types";
 import type { LinkComponent } from "../../../../components/types";
+import type { FormLayout } from "../../lib/types";
 import type { DataTablePage } from "../../../DataTable";
 import { createBaseApi } from "../../lib/baseApi";
 import { pickFieldValues } from "../../lib/fields";
@@ -51,6 +52,8 @@ export interface CrudDetailScreenProps {
   resourcePath?: (endpoint: string) => string | null;
   /** Fires after a successful delete - the host owns navigating away. */
   onDeleted?: () => void;
+  /** Overrides the schema's `form_layout` (sections, order, show-when rules) for this screen. */
+  formLayout?: FormLayout;
 }
 
 /**
@@ -142,7 +145,7 @@ function isShownDetail(field: SchemaField, displayField: string | undefined): bo
   return true;
 }
 
-function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent, resourcePath = lastSegment, onDeleted }: CrudDetailViewProps) {
+function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent, resourcePath = lastSegment, onDeleted, formLayout }: CrudDetailViewProps) {
   const Link = linkComponent ?? DefaultLink;
   const paths = createCrudPaths(basePath ?? lastSegment(baseApi.endpoint));
   const [record, setRecord] = useState<Row | null>(null);
@@ -306,6 +309,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
           <DetailEditForm
             id={id}
             schema={schema}
+            layout={formLayout ?? schema.form_layout}
             record={record}
             baseApi={baseApi}
             request={request}
@@ -346,6 +350,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
 function DetailEditForm({
   id,
   schema,
+  layout,
   record,
   baseApi,
   request,
@@ -354,6 +359,7 @@ function DetailEditForm({
 }: {
   id: string | number;
   schema: Schema;
+  layout?: FormLayout;
   record: Row;
   baseApi: BaseApi<Row>;
   request: BaseApiRequest;
@@ -373,7 +379,7 @@ function DetailEditForm({
   return (
     <form onSubmit={handleSubmit} noValidate>
       <CardBody>
-        <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
+        <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={layout} />
         {form.error && (
           <p className="text-danger mb-0" role="alert">
             {formErrorMessage(form.error, fields)}

@@ -2,7 +2,8 @@ import FormControl from "../../../../components/atoms/FormControl";
 import FormLabel from "../../../../components/atoms/FormLabel";
 import FormCheck from "../../../../components/molecules/FormCheck";
 import { isoToLocalInput, localInputToIso } from "../../lib/dateInput";
-import type { CrudField } from "../../lib/types";
+import { layoutSections, matches } from "../../lib/formLayout";
+import type { CrudField, FormLayout } from "../../lib/types";
 
 /** An emptied optional input: `null` clears a nullable field; `undefined` drops the key from the JSON payload so the server's default applies. */
 function emptyValue<T>(field: CrudField<T>): null | undefined {
@@ -24,6 +25,8 @@ export interface CrudFormFieldsProps<T> {
   onChange: <K extends keyof T>(key: K, value: T[K]) => void;
   /** The server's per-field reasons from a refused save (`fieldErrorsOf(form.error)`), shown under each field. */
   errors?: Record<string, string[]>;
+  /** Sections, order and show-when rules (`Schema.form_layout`, or a screen's `formLayout` prop); without one, every field in `fields` order. */
+  layout?: FormLayout;
 }
 
 /**
@@ -45,130 +48,162 @@ export interface CrudFormFieldsProps<T> {
  * `nullable`, otherwise drops it (server default applies - see
  * `CrudField.nullable`).
  */
-function CrudFormFields<T>({ fields, values, onChange, errors }: CrudFormFieldsProps<T>) {
+function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFormFieldsProps<T>) {
+  function renderField(field: CrudField<T>) {
+    if (field.type === "checkbox") {
+      return (
+        <div key={field.key} className="mb-3">
+          <FormCheck
+            label={field.label}
+            required={field.required}
+            checked={Boolean(values[field.key])}
+            onChange={(event) => onChange(field.key, event.target.checked as T[typeof field.key])}
+          />
+          <FieldError messages={errors?.[field.key]} />
+        </div>
+      );
+    }
+
+    const fieldId = `crud-field-${field.key}`;
+
+    if (field.type === "select") {
+      // A choice whose value is "" ("Any time", "Every check-in counts") is a real value -
+      // sent as "" (not null) and no extra "None" option next to it. Without one, "None"
+      // (null) is offered only where null is accepted: an optional relation, or a field
+      // that isn't known to refuse it (`nullable: false` from the schema).
+      const hasBlank = field.options?.some((option) => option.value === "") ?? false;
+      const canClear = !field.required && (field.nullable !== false || field.relatedEndpoint !== undefined);
+      return (
+        <div key={field.key} className="mb-3">
+          <FormLabel htmlFor={fieldId} required={field.required}>
+            {field.label}
+          </FormLabel>
+          <select
+            id={fieldId}
+            className="form-select form-select-sm"
+            required={field.required}
+            value={
+              values[field.key] === undefined
+                ? (field.defaultValue ?? "")
+                : ((values[field.key] as string | null) ?? "")
+            }
+            onChange={(event) =>
+              onChange(field.key, (event.target.value || (hasBlank ? "" : null)) as T[typeof field.key])
+            }
+          >
+            {/* Re-selectable only where it can be cleared - an optional select (e.g. an optional parent/relation) needs this as a real choice, not just an unpicked placeholder, so a caller can clear a previous selection back to "none". */}
+            {!hasBlank && (
+              <option value="" disabled={!canClear}>
+                {canClear ? "None" : "Select…"}
+              </option>
+            )}
+            {field.options?.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <Hint text={field.helpText} />
+        <FieldError messages={errors?.[field.key]} />
+        </div>
+      );
+    }
+
+    if (field.type === "textarea") {
+      return (
+        <div key={field.key} className="mb-3">
+          <FormLabel htmlFor={fieldId} required={field.required}>
+            {field.label}
+          </FormLabel>
+          <textarea
+            id={fieldId}
+            className="form-control form-control-sm"
+            rows={3}
+            required={field.required}
+            value={(values[field.key] as string | undefined) ?? ""}
+            onChange={(event) => onChange(field.key, event.target.value as T[typeof field.key])}
+          />
+          <Hint text={field.helpText} />
+        <FieldError messages={errors?.[field.key]} />
+        </div>
+      );
+    }
+
+    if (field.type === "date" || field.type === "datetime") {
+      const isDateTime = field.type === "datetime";
+      const raw = values[field.key];
+      return (
+        <div key={field.key} className="mb-3">
+          <FormLabel htmlFor={fieldId} required={field.required}>
+            {field.label}
+          </FormLabel>
+          <FormControl
+            id={fieldId}
+            type={isDateTime ? "datetime-local" : "date"}
+            required={field.required}
+            value={isDateTime ? isoToLocalInput(raw) : typeof raw === "string" ? raw : ""}
+            onChange={(event) => {
+              const value = event.target.value;
+              const next = value === "" ? emptyValue(field) : isDateTime ? localInputToIso(value) : value;
+              onChange(field.key, next as T[typeof field.key]);
+            }}
+          />
+          <Hint text={field.helpText} />
+        <FieldError messages={errors?.[field.key]} />
+        </div>
+      );
+    }
+
+    return (
+      <div key={field.key} className="mb-3">
+        <FormLabel htmlFor={fieldId} required={field.required}>
+          {field.label}
+        </FormLabel>
+        <FormControl
+          id={fieldId}
+          type={field.type ?? "text"}
+          required={field.required}
+          autoComplete={field.autoComplete}
+          value={(values[field.key] as string | number | undefined) ?? ""}
+          onChange={(event) => {
+            const raw = field.type === "number" ? event.target.valueAsNumber : event.target.value;
+            onChange(field.key, raw as T[typeof field.key]);
+          }}
+        />
+        <Hint text={field.helpText} />
+        <FieldError messages={errors?.[field.key]} />
+      </div>
+    );
+  }
+
+  if (!layout?.length) return <>{fields.map(renderField)}</>;
   return (
     <>
-      {fields.map((field) => {
-        if (field.type === "checkbox") {
+      {layoutSections(layout, fields).map((section, index) => {
+        const shown = section.fields.filter(({ showIf }) => matches(showIf, fields, values));
+        if (shown.length === 0) return null;
+        const content = (
+          <>
+            {section.description && <p className="text-secondary small mb-2">{section.description}</p>}
+            {shown.map(({ field }) => renderField(field))}
+          </>
+        );
+        const key = section.title ?? `section-${index}`;
+        if (section.collapsed) {
+          // Open by itself when the server refused one of its fields.
+          const refused = shown.some(({ field }) => errors?.[field.key]?.length);
           return (
-            <div key={field.key} className="mb-3">
-              <FormCheck
-                label={field.label}
-                required={field.required}
-                checked={Boolean(values[field.key])}
-                onChange={(event) => onChange(field.key, event.target.checked as T[typeof field.key])}
-              />
-              <FieldError messages={errors?.[field.key]} />
-            </div>
+            <details key={key} className="gn-form-section mb-3" open={refused || undefined}>
+              <summary className="subheader mb-2" style={{ cursor: "pointer" }}>{section.title ?? "More"}</summary>
+              {content}
+            </details>
           );
         }
-
-        const fieldId = `crud-field-${field.key}`;
-
-        if (field.type === "select") {
-          // A choice whose value is "" ("Any time", "Every check-in counts") is a real value -
-          // sent as "" (not null) and no extra "None" option next to it.
-          const hasBlank = field.options?.some((option) => option.value === "") ?? false;
-          return (
-            <div key={field.key} className="mb-3">
-              <FormLabel htmlFor={fieldId} required={field.required}>
-                {field.label}
-              </FormLabel>
-              <select
-                id={fieldId}
-                className="form-select form-select-sm"
-                required={field.required}
-                value={
-                  values[field.key] === undefined
-                    ? (field.defaultValue ?? "")
-                    : ((values[field.key] as string | null) ?? "")
-                }
-                onChange={(event) =>
-                  onChange(field.key, (event.target.value || (hasBlank ? "" : null)) as T[typeof field.key])
-                }
-              >
-                {/* Only disabled when required - an optional select (e.g. an optional parent/relation) needs this as a real, re-selectable choice, not just an unpicked placeholder, so a caller can clear a previous selection back to "none". */}
-                {!hasBlank && (
-                  <option value="" disabled={field.required}>
-                    {field.required ? "Select…" : "None"}
-                  </option>
-                )}
-                {field.options?.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <Hint text={field.helpText} />
-              <FieldError messages={errors?.[field.key]} />
-            </div>
-          );
-        }
-
-        if (field.type === "textarea") {
-          return (
-            <div key={field.key} className="mb-3">
-              <FormLabel htmlFor={fieldId} required={field.required}>
-                {field.label}
-              </FormLabel>
-              <textarea
-                id={fieldId}
-                className="form-control form-control-sm"
-                rows={3}
-                required={field.required}
-                value={(values[field.key] as string | undefined) ?? ""}
-                onChange={(event) => onChange(field.key, event.target.value as T[typeof field.key])}
-              />
-              <Hint text={field.helpText} />
-              <FieldError messages={errors?.[field.key]} />
-            </div>
-          );
-        }
-
-        if (field.type === "date" || field.type === "datetime") {
-          const isDateTime = field.type === "datetime";
-          const raw = values[field.key];
-          return (
-            <div key={field.key} className="mb-3">
-              <FormLabel htmlFor={fieldId} required={field.required}>
-                {field.label}
-              </FormLabel>
-              <FormControl
-                id={fieldId}
-                type={isDateTime ? "datetime-local" : "date"}
-                required={field.required}
-                value={isDateTime ? isoToLocalInput(raw) : typeof raw === "string" ? raw : ""}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  const next = value === "" ? emptyValue(field) : isDateTime ? localInputToIso(value) : value;
-                  onChange(field.key, next as T[typeof field.key]);
-                }}
-              />
-              <Hint text={field.helpText} />
-              <FieldError messages={errors?.[field.key]} />
-            </div>
-          );
-        }
-
         return (
-          <div key={field.key} className="mb-3">
-            <FormLabel htmlFor={fieldId} required={field.required}>
-              {field.label}
-            </FormLabel>
-            <FormControl
-              id={fieldId}
-              type={field.type ?? "text"}
-              required={field.required}
-              autoComplete={field.autoComplete}
-              value={(values[field.key] as string | number | undefined) ?? ""}
-              onChange={(event) => {
-                const raw = field.type === "number" ? event.target.valueAsNumber : event.target.value;
-                onChange(field.key, raw as T[typeof field.key]);
-              }}
-            />
-            <Hint text={field.helpText} />
-              <FieldError messages={errors?.[field.key]} />
-          </div>
+          <fieldset key={key} className="mb-3">
+            {section.title && <legend className="subheader mb-2">{section.title}</legend>}
+            {content}
+          </fieldset>
         );
       })}
     </>

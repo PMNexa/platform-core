@@ -30,3 +30,28 @@ export interface CrudField<T> {
   /** Only present on a relation `select` field - the related resource's own base URL (`SchemaField.related_endpoint`) `fetchRelationOptions` fetches `options` from. Its absence on a relation field (a related model with no `core_api.registry` entry) is why that field falls back to a bare text input instead - see `schemaFields.ts`. */
   relatedEndpoint?: string;
 }
+
+/** When a laid-out field shows: the form's current value of `field` is one of `in` / none of `not_in` ("" stands for empty). */
+export interface FormShowIf {
+  field: string;
+  in?: unknown[];
+  not_in?: unknown[];
+}
+
+/** One field in a `FormSection` - a bare name, or with a show-when rule. */
+export type FormLayoutField = string | { name: string; show_if?: FormShowIf };
+
+/** A titled group of form fields; `collapsed` = folded away ("Advanced") until opened. */
+export interface FormSection {
+  title?: string;
+  description?: string;
+  collapsed?: boolean;
+  fields: FormLayoutField[];
+}
+
+/**
+ * How a form is laid out: sections in order. From the resource's schema
+ * (`Schema.form_layout`, the serializer's `Meta.form_layout`), or a screen's
+ * `formLayout` prop, which wins. Fields it doesn't name still show, last.
+ */
+export type FormLayout = FormSection[];

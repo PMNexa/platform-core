@@ -4,7 +4,7 @@ import Modal from "../../../../components/organisms/Modal";
 import type { BaseApiRequest } from "../../lib/baseApi";
 import { pickFieldValues } from "../../lib/fields";
 import { useRelationFields } from "../../lib/relationOptions";
-import type { CrudField } from "../../lib/types";
+import type { CrudField, FormLayout } from "../../lib/types";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
@@ -24,6 +24,8 @@ export interface CrudFormModalProps {
   /** Gets exactly the `fields`' values (`pickFieldValues`). The modal closes once it resolves; a rejection is shown in the form instead. */
   onSubmit: (values: Row) => Promise<unknown>;
   onClose: () => void;
+  /** Sections and show-when rules - typically the resource's `schema.form_layout`. */
+  layout?: FormLayout;
 }
 
 /**
@@ -36,7 +38,7 @@ function CrudFormModal(props: CrudFormModalProps) {
   return props.open ? <CrudFormModalBody {...props} /> : null;
 }
 
-function CrudFormModalBody({ title, fields: baseFields, request, load, submitLabel = "Save", onSubmit, onClose }: CrudFormModalProps) {
+function CrudFormModalBody({ title, fields: baseFields, request, load, submitLabel = "Save", onSubmit, onClose, layout }: CrudFormModalProps) {
   const formId = useId();
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<Row>();
@@ -99,7 +101,7 @@ function CrudFormModalBody({ title, fields: baseFields, request, load, submitLab
       )}
       {!loading && !loadError && (
         <form id={formId} onSubmit={handleSubmit} noValidate>
-          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
+          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={layout} />
           {form.error && (
             <p className="text-danger mb-0" role="alert">
               {formErrorMessage(form.error, fields)}

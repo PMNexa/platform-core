@@ -13,6 +13,7 @@ export { createBaseApi } from "./lib/baseApi";
 export type { BaseApi, BaseApiRequest } from "./lib/baseApi";
 
 export { createRequest } from "./lib/request";
+export { fieldErrorsOf, formErrorMessage, RequestError } from "./lib/requestError";
 
 export * from "./lib/schema";
 

@@ -6,6 +6,7 @@ import { pickFieldValues } from "../../lib/fields";
 import { useRelationFields } from "../../lib/relationOptions";
 import { createRequest } from "../../lib/request";
 import type { Schema } from "../../lib/schema";
+import type { FormLayout } from "../../lib/types";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
@@ -20,6 +21,8 @@ export interface CrudEditScreenProps<T> {
   onUpdated?: (row: T) => void;
   /** Fires after a successful delete - the host still owns navigating away. */
   onDeleted?: () => void;
+  /** Overrides the schema's `form_layout` (sections, order, show-when rules) for this screen. */
+  formLayout?: FormLayout;
 }
 
 /**
@@ -30,7 +33,7 @@ export interface CrudEditScreenProps<T> {
  * loads the record itself via `baseApi.read(id)` - schema, then record,
  * never the other way or in parallel).
  */
-function CrudEditScreen<T>({ baseUrl, accessToken, id, onUpdated, onDeleted }: CrudEditScreenProps<T>) {
+function CrudEditScreen<T>({ baseUrl, accessToken, id, onUpdated, onDeleted, formLayout }: CrudEditScreenProps<T>) {
   const request = useMemo(() => createRequest(accessToken), [accessToken]);
   const baseApi = useMemo(() => createBaseApi<T>(baseUrl, request), [baseUrl, request]);
   const [schema, setSchema] = useState<Schema | null>(null);
@@ -75,7 +78,7 @@ function CrudEditScreen<T>({ baseUrl, accessToken, id, onUpdated, onDeleted }: C
       </Card>
     );
 
-  return <CrudEditForm baseApi={baseApi} schema={schema} request={request} id={id} onUpdated={onUpdated} onDeleted={onDeleted} />;
+  return <CrudEditForm baseApi={baseApi} schema={schema} request={request} id={id} onUpdated={onUpdated} onDeleted={onDeleted} formLayout={formLayout} />;
 }
 
 interface CrudEditFormProps<T> extends Omit<CrudEditScreenProps<T>, "baseUrl" | "accessToken"> {
@@ -90,7 +93,7 @@ interface CrudEditFormProps<T> extends Omit<CrudEditScreenProps<T>, "baseUrl" | 
  * form `CrudCreateForm` uses (`createSchemaFields(schema)` +
  * `useRelationFields`), prefilled (Save + Delete both in `CardFooter`).
  */
-function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted }: CrudEditFormProps<T>) {
+function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, formLayout }: CrudEditFormProps<T>) {
   const baseFields = useMemo(() => createSchemaFields<T>(schema), [schema]);
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<T>();
@@ -165,7 +168,7 @@ function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted }:
     <form onSubmit={handleSubmit} noValidate>
       <Card>
         <CardBody>
-          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
+          <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={formLayout ?? schema.form_layout} />
           {form.error && (
             <p className="text-danger mb-0" role="alert">
               {formErrorMessage(form.error, fields)}

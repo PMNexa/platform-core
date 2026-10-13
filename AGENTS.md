@@ -808,6 +808,30 @@ looks up the ids on screen with one `GET <endpoint>?filter{id.in}=...`
 per related endpoint and labels them the same way; an id the caller
 can't see stays an id.
 
+### Form layout, field errors
+
+**Layout** (`FormLayout`, `lib/formLayout.ts`): a serializer's
+`Meta.form_layout` is sent as the schema's `form_layout` - sections
+`{title, description?, collapsed?, fields: [name | {name, show_if:
+{field, in? | not_in?}}]}`. `CrudFormFields` renders them (a `fieldset`
+per section, `<details>` for a collapsed one, opened when one of its
+fields was refused); a field the layout doesn't name still shows, in a
+last untitled section; a `show_if` tests the form's value (else the
+select's `defaultValue`; null = ""), and one naming a field the form
+doesn't have (preset by the caller) shows. Every form screen
+(`CrudCreateScreen`, `CrudEditScreen`, `CrudDetailScreen`) takes
+`formLayout` to override it for that screen; `CrudFormModal` takes
+`layout` (`CrudRelationSection` passes the child's). A host test should
+check every layout names editable fields (goalnexa's:
+`tests/test_form_layouts.py` in apps/main). **Selects**: a choice whose
+value is "" is a real value (sent as "", no extra "None"); without one,
+"None" (null) is offered only on an optional select that accepts null
+(`nullable` not false) or a relation, else a disabled "Select…"; a new
+row's select shows the schema's `default`. **Errors**: `createRequest`
+throws `RequestError` with the server's `field_errors`; forms show each
+under its field (`fieldErrorsOf`) and spell them out with field labels
+(`formErrorMessage`) instead of "Request failed validation.".
+
 ### Relationships - detail screen, 1-n CRUD, n-n link
 
 `CrudDetailScreen` (`/<resource>/:id`, generic route `crud-detail.tsx`)
