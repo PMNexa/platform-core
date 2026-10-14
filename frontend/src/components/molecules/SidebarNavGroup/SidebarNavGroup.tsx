@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LinkComponent, NavGroup } from "../../types";
 
 export interface SidebarNavGroupProps {
@@ -21,6 +21,22 @@ export interface SidebarNavGroupProps {
  */
 function SidebarNavGroup({ group, isActive, linkComponent: Link, open, onToggle, folded = false }: SidebarNavGroupProps) {
   const [hovered, setHovered] = useState(false);
+  // The pointer crosses a gap between the rail and the flyout: close a moment
+  // after it leaves, and stay open if it comes back (onto the flyout) first.
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  };
+  const enter = () => {
+    cancelClose();
+    setHovered(true);
+  };
+  const leave = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setHovered(false), 300);
+  };
+  useEffect(() => cancelClose, []);
   const active = group.children.some((child) => isActive(child.to));
   const shown = folded ? hovered : open;
   const icon = group.icon ?? (folded ? <span className="fw-bold">{group.label.charAt(0).toUpperCase()}</span> : null);
@@ -30,13 +46,16 @@ function SidebarNavGroup({ group, isActive, linkComponent: Link, open, onToggle,
     <li
       className={`nav-item dropdown${active ? " active" : ""}`}
       title={folded ? group.label : undefined}
-      onMouseEnter={folded ? () => setHovered(true) : undefined}
-      onMouseLeave={folded ? () => setHovered(false) : undefined}
-      onFocus={folded ? () => setHovered(true) : undefined}
+      onMouseEnter={folded ? enter : undefined}
+      onMouseLeave={folded ? leave : undefined}
+      onFocus={folded ? enter : undefined}
       onBlur={
         folded
           ? (event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHovered(false);
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                cancelClose();
+                setHovered(false);
+              }
             }
           : undefined
       }

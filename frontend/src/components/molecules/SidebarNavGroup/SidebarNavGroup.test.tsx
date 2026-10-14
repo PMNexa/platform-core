@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DefaultLink } from "../../types";
 import SidebarNavGroup from "./SidebarNavGroup";
@@ -44,8 +44,32 @@ describe("SidebarNavGroup", () => {
     expect(menu).not.toHaveClass("show");
     fireEvent.mouseEnter(container.querySelector("li") as HTMLElement);
     expect(menu).toHaveClass("show");
-    fireEvent.mouseLeave(container.querySelector("li") as HTMLElement);
-    expect(menu).not.toHaveClass("show");
+    vi.useFakeTimers();
+    try {
+      fireEvent.mouseLeave(container.querySelector("li") as HTMLElement);
+      // Closes a moment later, so the pointer can cross onto the flyout.
+      expect(menu).toHaveClass("show");
+      act(() => vi.advanceTimersByTime(400));
+      expect(menu).not.toHaveClass("show");
+    } finally {
+      vi.useRealTimers();
+    }
     expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it("folded: stays open when the pointer comes back before it closes", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = renderGroup({ folded: true });
+      const li = container.querySelector("li") as HTMLElement;
+      fireEvent.mouseEnter(li);
+      fireEvent.mouseLeave(li);
+      act(() => vi.advanceTimersByTime(100));
+      fireEvent.mouseEnter(li);
+      act(() => vi.advanceTimersByTime(400));
+      expect(container.querySelector(".dropdown-menu")).toHaveClass("show");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
