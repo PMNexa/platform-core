@@ -26,4 +26,9 @@ describe("formatFieldValue", () => {
     expect(formatFieldValue(field({ type: "boolean" }), false)).toBe("No");
     expect(formatFieldValue(field({ type: "date" }), "2026-01-31")).toContain("31");
   });
+
+  it("spells out a structured value as key: value pairs", () => {
+    expect(formatFieldValue(field({}), { per: "day", in_period: true, done: 3, note: null })).toBe("Per: day · In period: Yes · Done: 3");
+    expect(formatFieldValue(field({}), ["a", "b"])).toBe("a, b");
+  });
 });

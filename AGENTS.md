@@ -821,7 +821,14 @@ select's `defaultValue`; null = ""), and one naming a field the form
 doesn't have (preset by the caller) shows. Every form screen
 (`CrudCreateScreen`, `CrudEditScreen`, `CrudDetailScreen`) takes
 `formLayout` to override it for that screen; `CrudFormModal` takes
-`layout` (`CrudRelationSection` passes the child's). A host test should
+`layout` (`CrudRelationSection` passes the child's). **Widgets**: an
+entry `{name, widget, with: [entries]}` draws that field and its `with`
+fields with one component the host registered
+(`registerFieldWidget(name, Component)`, `lib/fieldWidgets.ts`; props
+`FieldWidgetProps`: `field`, `fields` by key, `values`, `onChange(key,
+value)`, `errors`) - one control for a setting spread over several
+fields (goalnexa's "check-in-moment"). Unregistered, the field and its
+`with` fields render plainly, each by its own `show_if`. A host test should
 check every layout names editable fields (goalnexa's:
 `tests/test_form_layouts.py` in apps/main). **Selects**: a choice whose
 value is "" is a real value (sent as "", no extra "None"); without one,

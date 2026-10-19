@@ -38,8 +38,14 @@ export interface FormShowIf {
   not_in?: unknown[];
 }
 
-/** One field in a `FormSection` - a bare name, or with a show-when rule. */
-export type FormLayoutField = string | { name: string; show_if?: FormShowIf };
+/**
+ * One field in a `FormSection` - a bare name, or with a show-when rule.
+ * `widget` names a registered field widget (`registerFieldWidget`) that
+ * draws this field together with the fields in `with` (one control for a
+ * setting spread over several fields); without that widget registered,
+ * they render as plain fields, each by its own `show_if`.
+ */
+export type FormLayoutField = string | { name: string; show_if?: FormShowIf; widget?: string; with?: FormLayoutField[] };
 
 /** A titled group of form fields; `collapsed` = folded away ("Advanced") until opened. */
 export interface FormSection {

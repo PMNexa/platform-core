@@ -11,6 +11,7 @@ import { createBaseApi } from "../../lib/baseApi";
 import { pickFieldValues } from "../../lib/fields";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
 import { formatFieldValue } from "../../lib/format";
+import { layoutOrder, recordMatches } from "../../lib/formLayout";
 import { createCrudPaths } from "../../lib/paths";
 import { rowLabel, useRelationFields } from "../../lib/relationOptions";
 import { createRequest } from "../../lib/request";
@@ -198,10 +199,27 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
 
   const title = rowLabel(record, schema.display_field);
 
+  // The form layout's order and show-when rules apply here too: what the
+  // form wouldn't show for this record (e.g. a setting's unused parts) isn't
+  // shown; fields the layout doesn't name follow in schema order.
+  const layout = formLayout ?? schema.form_layout;
+  const shownFields = layout?.length
+    ? (() => {
+        const order = layoutOrder(layout);
+        const rank = new Map(order.map(({ name }, index) => [name, index]));
+        const hidden = new Set(order.filter(({ showIf }) => !recordMatches(showIf, record)).map(({ name }) => name));
+        return detailFields
+          .filter((field) => !hidden.has(field.name))
+          .map((field, index) => ({ field, key: rank.get(field.name) ?? order.length + index }))
+          .sort((a, b) => a.key - b.key)
+          .map(({ field }) => field);
+      })()
+    : detailFields;
+
   function renderValue(field: SchemaField): ReactNode {
     const value = record?.[field.name];
     if (value == null || value === "") return <span className="text-secondary">—</span>;
-    if (field.choices?.length) return <span className="badge bg-blue-lt">{formatFieldValue(field, value)}</span>;
+    if (field.choices?.length) return <span className="badge bg-blue-lt text-wrap text-start mw-100" style={{ lineHeight: 1.3 }}>{formatFieldValue(field, value)}</span>;
     if (field.type === "boolean")
       return <span className={`badge ${value ? "bg-green-lt" : "bg-secondary-lt"}`}>{formatFieldValue(field, value)}</span>;
     if (field.type !== "relation") return formatFieldValue(field, value);
@@ -321,11 +339,11 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
           />
         ) : (
           <CardBody>
-            {detailFields.length === 0 ? (
+            {shownFields.length === 0 ? (
               <p className="text-secondary mb-0">Nothing else to show.</p>
             ) : (
               <dl className="row g-3 mb-0">
-                {detailFields.map((field) => (
+                {shownFields.map((field) => (
                   <div key={field.name} className={field.multiline ? "col-12" : "col-12 col-sm-6 col-lg-4 col-xl-3"}>
                     <dt className="text-secondary fw-normal small mb-1">{field.label}</dt>
                     <dd className="mb-0 text-break" style={field.multiline ? { whiteSpace: "pre-wrap" } : undefined}>

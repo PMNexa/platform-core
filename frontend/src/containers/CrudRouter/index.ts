@@ -9,6 +9,9 @@ export type { CrudPaths } from "./lib/paths";
 
 export * from "./lib/types";
 
+export { registerFieldWidget } from "./lib/fieldWidgets";
+export type { FieldWidgetProps } from "./lib/fieldWidgets";
+
 export { createBaseApi } from "./lib/baseApi";
 export type { BaseApi, BaseApiRequest } from "./lib/baseApi";
 

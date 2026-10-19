@@ -23,5 +23,26 @@ export function formatFieldValue(field: SchemaField, value: unknown): string {
     const [year, month, day] = value.split("-").map(Number);
     return year && month && day ? DATE_FORMAT.format(new Date(year, month - 1, day)) : value;
   }
+  if (typeof value === "object") return plainValue(value);
+  return String(value);
+}
+
+/** "per_day" -> "Per day". */
+function humanize(key: string): string {
+  const words = key.replace(/_/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** A structured value (an object or list the schema has no type for) as "Key: value · ..." text. */
+function plainValue(value: unknown): string {
+  if (value == null || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.map(plainValue).join(", ");
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item != null && item !== "")
+      .map(([key, item]) => `${humanize(key)}: ${typeof item === "object" ? JSON.stringify(item) : plainValue(item)}`)
+      .join(" · ");
+  }
   return String(value);
 }

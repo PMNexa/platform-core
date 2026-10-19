@@ -2,7 +2,9 @@ import FormControl from "../../../../components/atoms/FormControl";
 import FormLabel from "../../../../components/atoms/FormLabel";
 import FormCheck from "../../../../components/molecules/FormCheck";
 import { isoToLocalInput, localInputToIso } from "../../lib/dateInput";
-import { layoutSections, matches } from "../../lib/formLayout";
+import type { ReactNode } from "react";
+import { fieldWidget, type FieldWidgetProps } from "../../lib/fieldWidgets";
+import { layoutSections, matches, type LaidOutField } from "../../lib/formLayout";
 import type { CrudField, FormLayout } from "../../lib/types";
 
 /** An emptied optional input: `null` clears a nullable field; `undefined` drops the key from the JSON payload so the server's default applies. */
@@ -176,6 +178,30 @@ function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFor
     );
   }
 
+  /** A laid-out field: by its registered widget (with its `with` fields), else plainly, its `with` fields after it by their own rules. */
+  function renderEntry(entry: LaidOutField<T>): ReactNode {
+    const Widget = fieldWidget(entry.widget);
+    if (Widget) {
+      const own = Object.fromEntries((entry.with ?? []).map(({ field }) => [field.key, field]));
+      return (
+        <div key={entry.field.key} className="mb-3">
+          <Widget
+            id={`crud-field-${entry.field.key}`}
+            field={entry.field as unknown as CrudField<Record<string, unknown>>}
+            fields={own as unknown as FieldWidgetProps["fields"]}
+            values={values as Record<string, unknown>}
+            onChange={(key, value) => onChange(key as keyof T, value as T[keyof T])}
+            errors={errors}
+          />
+        </div>
+      );
+    }
+    return [
+      renderField(entry.field),
+      ...(entry.with ?? []).filter(({ showIf }) => matches(showIf, fields, values)).map(renderEntry),
+    ];
+  }
+
   if (!layout?.length) return <>{fields.map(renderField)}</>;
   return (
     <>
@@ -185,7 +211,7 @@ function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFor
         const content = (
           <>
             {section.description && <p className="text-secondary small mb-2">{section.description}</p>}
-            {shown.map(({ field }) => renderField(field))}
+            {shown.map(renderEntry)}
           </>
         );
         const key = section.title ?? `section-${index}`;
