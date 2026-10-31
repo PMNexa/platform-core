@@ -136,6 +136,42 @@ interface CrudDetailViewProps extends Omit<CrudDetailScreenProps, "baseUrl" | "a
   request: BaseApiRequest;
 }
 
+/**
+ * A `file` field's value: its name and a Download button. The file is
+ * fetched with the caller's token (`BaseApi.file` - files aren't static
+ * media, the row's own scoping applies) and handed to the browser.
+ */
+function FileValue({ name, download }: { name: string; download: () => Promise<Blob> }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function save() {
+    setBusy(true);
+    setError(null);
+    try {
+      const blob = await download();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = name;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (thrown) {
+      setError(thrown instanceof Error ? thrown.message : String(thrown));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <span className="d-inline-flex align-items-center gap-2">
+      {name}
+      <Button type="button" variant="secondary" outline onClick={save} disabled={busy}>
+        {busy ? "Downloading…" : "Download"}
+      </Button>
+      {error && <span className="text-danger small">{error}</span>}
+    </span>
+  );
+}
+
 /** The fields tab's key - not a valid field name, so it can't collide with a relation's. */
 const DETAILS_TAB = "__details";
 
@@ -222,6 +258,8 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
     if (field.choices?.length) return <span className="badge bg-blue-lt text-wrap text-start mw-100" style={{ lineHeight: 1.3 }}>{formatFieldValue(field, value)}</span>;
     if (field.type === "boolean")
       return <span className={`badge ${value ? "bg-green-lt" : "bg-secondary-lt"}`}>{formatFieldValue(field, value)}</span>;
+    if (field.type === "file")
+      return <FileValue name={formatFieldValue(field, value)} download={() => baseApi.file(id, field.name)} />;
     if (field.type !== "relation") return formatFieldValue(field, value);
     const label = relationLabels[`${field.related_endpoint}/${value}`] ?? String(value);
     const mount = field.related_endpoint ? resourcePath(field.related_endpoint) : null;

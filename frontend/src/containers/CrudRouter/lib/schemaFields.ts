@@ -24,6 +24,7 @@ const TYPE_MAP: Partial<Record<SchemaFieldType, CrudFieldType>> = {
   email: "email",
   date: "date",
   datetime: "datetime",
+  file: "file",
 };
 
 function crudFieldType(field: SchemaField): CrudFieldType {
@@ -65,6 +66,7 @@ export function createSchemaFields<T>(schema: Schema): CrudField<T>[] {
       required: field.required,
       nullable: field.nullable,
       ...(field.help_text ? { helpText: field.help_text } : {}),
+      ...(type === "file" && field.accept ? { accept: field.accept } : {}),
       ...(type === "select" && field.choices ? { options: field.choices } : {}),
       ...(type === "select" && field.default !== undefined ? { defaultValue: field.default } : {}),
       ...(type === "select" && field.type === "relation" && field.related_endpoint

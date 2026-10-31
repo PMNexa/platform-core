@@ -27,6 +27,8 @@ class Book(models.Model):
     shelf = models.ForeignKey(Shelf, null=True, on_delete=models.SET_NULL, related_name="books")
     # many_to_many, auto-created through
     tags = models.ManyToManyField(Tag, related_name="books", blank=True)
+    # a file field: multipart in, name out, content at books/<id>/files/cover
+    cover = models.FileField(upload_to="covers/", blank=True, default="")
 
 
 class Club(models.Model):

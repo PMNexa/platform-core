@@ -1,4 +1,5 @@
 import type { DataTablePage } from "../../DataTable";
+import { encodeBody } from "./multipart";
 import type { Schema } from "./schema";
 
 /** A caller's own authenticated-fetch-and-parse function (Bearer token injection, error shaping - see `createRequest`) - `createBaseApi` only owns the URL-building/method wiring, never the fetch mechanism itself. */
@@ -28,6 +29,8 @@ export interface BaseApi<T> {
   update: (id: string | number, values: Partial<T>) => Promise<T>;
   /** `DELETE <endpoint>/<id>`. */
   remove: (id: string | number) => Promise<void>;
+  /** `GET <endpoint>/<id>/files/<field>` - a `file` field's content (see `SchemaField.accept`), through the row's own scoping. */
+  file: (id: string | number, field: string) => Promise<Blob>;
   /** `POST <endpoint>/<id>/relations/<relation>/link` - links a many-to-many relation's rows to this one; `through` carries a custom through model's own fields (see `SchemaField.through_fields`). */
   link: (id: string | number, relation: string, ids: (string | number)[], through?: Record<string, unknown>) => Promise<void>;
   /** `POST <endpoint>/<id>/relations/<relation>/unlink` - removes those links; the rows themselves stay. */
@@ -40,9 +43,11 @@ export function createBaseApi<T>(endpoint: string, request: BaseApiRequest): Bas
     schema: () => request<Schema>(`${endpoint}/schema`),
     list: (url) => request<DataTablePage<T>>(url),
     read: (id) => request<T>(`${endpoint}/${id}`),
-    create: (values) => request<T>(endpoint, { method: "POST", body: JSON.stringify(values) }),
-    update: (id, values) => request<T>(`${endpoint}/${id}`, { method: "PATCH", body: JSON.stringify(values) }),
+    // JSON, or multipart once a `File` is among the values (a `file` field).
+    create: (values) => request<T>(endpoint, { method: "POST", body: encodeBody(values) }),
+    update: (id, values) => request<T>(`${endpoint}/${id}`, { method: "PATCH", body: encodeBody(values) }),
     remove: (id) => request<void>(`${endpoint}/${id}`, { method: "DELETE" }),
+    file: (id, field) => request<Blob>(`${endpoint}/${id}/files/${field}`, { headers: { Accept: "application/octet-stream" } }),
     link: (id, relation, ids, through) =>
       request<void>(`${endpoint}/${id}/relations/${relation}/link`, {
         method: "POST",

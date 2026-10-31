@@ -32,6 +32,7 @@ function api(overrides: Partial<BaseApi<Row>> = {}): BaseApi<Row> {
     remove: vi.fn().mockResolvedValue(undefined),
     link: vi.fn().mockResolvedValue(undefined),
     unlink: vi.fn().mockResolvedValue(undefined),
+    file: vi.fn().mockResolvedValue(new Blob()),
     ...overrides,
   };
 }

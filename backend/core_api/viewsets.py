@@ -13,7 +13,12 @@ been sideloaded (named in `?include[]=`) - without this, sideloading a
 against a real dataset instead of a handful of local test rows.
 """
 
+import os
+
 from django.db import models, transaction
+from django.http import FileResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers as drf_serializers
 from rest_framework import status
 from rest_framework.decorators import action
@@ -37,6 +42,9 @@ _FIELD_TYPES = (
     (drf_serializers.DateTimeField, "datetime"),  # before DateField - IS a subclass of it
     (drf_serializers.DateField, "date"),
     (drf_serializers.EmailField, "email"),
+    # An upload: sent as multipart (the generic form switches to it), read
+    # back as the stored name, fetched from `<resource>/<id>/files/<field>`.
+    (drf_serializers.FileField, "file"),
     (drf_serializers.CharField, "string"),
     (drf_serializers.UUIDField, "string"),
 )
@@ -94,6 +102,10 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
     help_text = getattr(field, "help_text", None)
     if help_text:
         description["help_text"] = str(help_text)
+    if isinstance(field, drf_serializers.FileField) and getattr(field, "style", {}).get("accept"):
+        # What the file picker offers (`style={"accept": ".pdf,.epub"}` on
+        # the serializer field) - a hint for the form; the server validates.
+        description["accept"] = field.style["accept"]
     if isinstance(field, drf_serializers.ChoiceField):
         description["choices"] = [{"value": value, "label": str(label)} for value, label in field.choices.items()]
         default = _choice_default(field, model)
@@ -276,6 +288,41 @@ class BaseViewSet(ModelViewSet):
             scoped = _scoped_queryset(model, self.request) if model else None
             if scoped is not None and not scoped.filter(pk=value).exists():
                 raise ValidationError({name: [f"Unknown id: {value}"]})
+
+    @classmethod
+    def get_extra_actions(cls):
+        # `files` is routed only where the serializer has a file field, so
+        # a resource without one shows no dead `files/{field_name}` route.
+        actions = super().get_extra_actions()
+        return actions if cls._has_file_fields() else [a for a in actions if a.__name__ != "files"]
+
+    @classmethod
+    def _has_file_fields(cls) -> bool:
+        serializer_class = getattr(cls, "serializer_class", None)
+        if serializer_class is None:
+            return True  # decided per request (get_serializer_class) - keep the route
+        return any(isinstance(field, drf_serializers.FileField) for field in serializer_class().get_fields().values())
+
+    @extend_schema(
+        parameters=[OpenApiParameter("field_name", OpenApiTypes.STR, OpenApiParameter.PATH, description="A file field of this resource.")],
+        responses={(200, "application/octet-stream"): OpenApiTypes.BINARY},
+        description="The file stored in that field, as an attachment. 404 when the field holds no file. "
+        "Uploading is a multipart create or update of the row itself.",
+    )
+    @action(detail=True, methods=["get"], url_path=r"files/(?P<field_name>[A-Za-z0-9_]+)", url_name="files")
+    def files(self, request, pk=None, field_name=None):
+        """`GET <resource>/<id>/files/<field>` - the content of a `FileField`,
+        through the same `get_object()` (scoping, access policy) as the row.
+        Files aren't served as static media: who may read a row decides who
+        may read its files."""
+        instance = self.get_object()
+        field = self.get_serializer_class()().get_fields().get(field_name)
+        if not isinstance(field, drf_serializers.FileField):
+            raise NotFound(f"No file field named {field_name!r}.")
+        stored = getattr(instance, field.source if field.source not in (None, "*") else field_name, None)
+        if not stored:
+            raise NotFound("No file.")
+        return FileResponse(stored.open("rb"), as_attachment=True, filename=os.path.basename(stored.name))
 
     def _check_saved(self, instance):
         if get_access_policy() is not None and instance is not None:

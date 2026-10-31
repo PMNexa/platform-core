@@ -17,6 +17,7 @@ class BookSerializer(BaseSerializer):
     class Meta:
         model = Book
         related_endpoints = {"shelf_ref": "/shelves"}
+        extra_kwargs = {"cover": {"style": {"accept": ".png,.jpg"}}}
 
 
 class ClubSerializer(BaseSerializer):

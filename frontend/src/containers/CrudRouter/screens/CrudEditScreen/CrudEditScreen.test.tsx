@@ -31,6 +31,7 @@ function mockApi(overrides: Partial<BaseApi<Org>> = {}): BaseApi<Org> {
     remove: vi.fn().mockResolvedValue(undefined),
     link: vi.fn().mockResolvedValue(undefined),
     unlink: vi.fn().mockResolvedValue(undefined),
+    file: vi.fn().mockResolvedValue(new Blob()),
     ...overrides,
   };
   vi.mocked(createBaseApi).mockReturnValue(api);

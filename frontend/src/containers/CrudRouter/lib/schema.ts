@@ -16,7 +16,7 @@ export interface SchemaFieldChoice {
   label: string;
 }
 
-export type SchemaFieldType = "string" | "integer" | "number" | "boolean" | "date" | "datetime" | "email" | "relation";
+export type SchemaFieldType = "string" | "integer" | "number" | "boolean" | "date" | "datetime" | "email" | "file" | "relation";
 
 export interface SchemaField {
   name: string;
@@ -32,6 +32,8 @@ export interface SchemaField {
   multiline?: boolean;
   /** The model field's `help_text`, when it has one. */
   help_text?: string;
+  /** Only on a `file` field - what the file picker offers (`<input accept>`, e.g. `".pdf,.epub"`). The server validates either way. A `file` field reads back as the stored name; its content is at `<endpoint>/<id>/files/<name>`. */
+  accept?: string;
   /** Only present on a `ChoiceField` (e.g. a model's `TextChoices` status). */
   choices?: SchemaFieldChoice[];
   /** Only on a `ChoiceField` whose default is known - what a new row gets when the field is left out. */

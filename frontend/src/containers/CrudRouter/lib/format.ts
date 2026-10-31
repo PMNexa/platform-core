@@ -13,6 +13,8 @@ const DATE_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 export function formatFieldValue(field: SchemaField, value: unknown): string {
   if (value == null || value === "") return "—";
   if (field.type === "boolean") return value ? "Yes" : "No";
+  // A file reads back as its stored path; people know it by its name.
+  if (field.type === "file" && typeof value === "string") return value.split("/").pop() ?? value;
   const choice = field.choices?.find((option) => option.value === value);
   if (choice) return choice.label;
   if (field.type === "datetime" && typeof value === "string") {

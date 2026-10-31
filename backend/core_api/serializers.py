@@ -156,6 +156,15 @@ class BaseSerializer(serializers.ModelSerializer):
             fields.pop(name, None)
         return fields
 
+    def build_standard_field(self, field_name, model_field):
+        field_class, field_kwargs = super().build_standard_field(field_name, model_field)
+        if issubclass(field_class, serializers.FileField):
+            # Read back as the stored name, not a MEDIA_URL link: files are
+            # fetched through `BaseViewSet.files` (same scoping as the row),
+            # never served as static media.
+            field_kwargs["use_url"] = False
+        return field_class, field_kwargs
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")

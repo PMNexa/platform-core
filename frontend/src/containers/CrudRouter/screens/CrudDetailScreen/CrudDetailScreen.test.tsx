@@ -75,6 +75,7 @@ function api(endpoint: string, overrides: Partial<BaseApi<Row>> = {}): BaseApi<R
     remove: vi.fn().mockResolvedValue(undefined),
     link: vi.fn().mockResolvedValue(undefined),
     unlink: vi.fn().mockResolvedValue(undefined),
+    file: vi.fn().mockResolvedValue(new Blob()),
     ...overrides,
   };
 }

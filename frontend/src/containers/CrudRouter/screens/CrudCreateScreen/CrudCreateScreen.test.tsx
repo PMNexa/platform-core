@@ -33,6 +33,7 @@ function mockApi(overrides: Partial<BaseApi<Org>> = {}): BaseApi<Org> {
     remove: vi.fn().mockResolvedValue(undefined),
     link: vi.fn().mockResolvedValue(undefined),
     unlink: vi.fn().mockResolvedValue(undefined),
+    file: vi.fn().mockResolvedValue(new Blob()),
     ...overrides,
   };
   vi.mocked(createBaseApi).mockReturnValue(api);
@@ -70,6 +71,31 @@ describe("CrudCreateScreen", () => {
 
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Name already taken"));
     expect(onCreated).not.toHaveBeenCalled();
+  });
+
+  it("offers a file picker for a file field and submits the picked File", async () => {
+    const create = vi.fn().mockResolvedValue({ id: 1, name: "Acme" });
+    const schema: Schema = {
+      fields: [
+        { name: "id", type: "string", required: false, read_only: true, label: "Id" },
+        { name: "name", type: "string", required: true, read_only: false, label: "Name" },
+        { name: "cover", type: "file", required: false, read_only: false, label: "Cover", accept: ".png,.jpg" },
+      ],
+    };
+    mockApi({ create, schema: vi.fn().mockResolvedValue(schema) });
+
+    render(<CrudCreateScreen {...PROPS} />);
+    await waitFor(() => expect(screen.getByLabelText("Cover")).toBeInTheDocument());
+    const picker = screen.getByLabelText("Cover") as HTMLInputElement;
+    expect(picker.type).toBe("file");
+    expect(picker.accept).toBe(".png,.jpg");
+
+    const file = new File(["png"], "cover.png", { type: "image/png" });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Acme" } });
+    fireEvent.change(picker, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() => expect(create).toHaveBeenCalledWith({ name: "Acme", cover: file }));
   });
 
   it("marks a required field as required", async () => {

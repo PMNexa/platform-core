@@ -131,6 +131,35 @@ function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFor
       );
     }
 
+    if (field.type === "file") {
+      // The form holds a `File` once picked; while editing, the stored
+      // name (a string) until replaced. Emptying submits null/omits,
+      // like a date - the server keeps the file it has.
+      const current = values[field.key];
+      const picked = typeof File !== "undefined" && current instanceof File ? current : null;
+      const stored = typeof current === "string" && current ? current.split("/").pop() : null;
+      return (
+        <div key={field.key} className="mb-3">
+          <FormLabel htmlFor={fieldId} required={field.required && !stored}>
+            {field.label}
+          </FormLabel>
+          <input
+            id={fieldId}
+            type="file"
+            className="form-control form-control-sm"
+            accept={field.accept}
+            required={field.required && !stored && !picked}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              onChange(field.key, (file ?? (stored ? current : emptyValue(field))) as T[typeof field.key]);
+            }}
+          />
+          {stored && !picked && <small className="form-hint">Current file: {stored}. Choose another to replace it.</small>}
+          <Hint text={field.helpText} />
+          <FieldError messages={errors?.[field.key]} />
+        </div>
+      );
+    }
     if (field.type === "date" || field.type === "datetime") {
       const isDateTime = field.type === "datetime";
       const raw = values[field.key];

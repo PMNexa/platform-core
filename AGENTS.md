@@ -857,6 +857,22 @@ resource, it's all from the schema.
   text: a read-only one is hidden on the detail page and hidden-by-default
   as a list column) and `multiline` (a `TextField`: `<textarea>` in forms,
   full-width block on the detail page).
+- **Files** (`type: "file"`, a model `FileField`): the generic form shows
+  a file picker (`accept` from `style={"accept": ".pdf,.epub"}` on the
+  serializer field) and, once a `File` is among the values, submits the
+  row as `multipart/form-data` instead of JSON (`lib/multipart.ts`;
+  `createRequest` drops the JSON content type for it) - create and edit
+  alike, so a file is just another field of the row. It reads back as the
+  stored name (`BaseSerializer` sets `use_url=False` - files are never
+  static media) and its content is `GET <resource>/<id>/files/<field>`
+  (`BaseViewSet.files`, through `get_object()` so the row's scoping and
+  access policy apply; routed only on viewsets whose serializer has a
+  file field - `get_extra_actions`). The detail page shows the name and a
+  Download button (`BaseApi.file`, fetched with the token, saved from a
+  blob). The MCP tools leave file fields out (platform-mcp): a tool call
+  can't carry a binary; the row is made by the agent, the file added in
+  the UI. Validation (type, size) is the resource's own, in its
+  serializer's `validate`.
 - `schema` tags each to-many `DynamicRelationField` backed by a real
   model relation with `kind` (`one_to_many` = reverse FK,
   `many_to_many` = M2M either side) and `back_filter` - the lookup on

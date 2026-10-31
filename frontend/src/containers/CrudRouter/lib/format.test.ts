@@ -12,6 +12,10 @@ const field = (overrides: Partial<SchemaField>): SchemaField => ({
 });
 
 describe("formatFieldValue", () => {
+  it("shows a file by its name, not its stored path", () => {
+    expect(formatFieldValue(field({ type: "file" }), "sources/abc/pmbok.pdf")).toBe("pmbok.pdf");
+  });
+
   it("shows an em dash for empty values", () => {
     expect(formatFieldValue(field({}), null)).toBe("—");
     expect(formatFieldValue(field({}), "")).toBe("—");

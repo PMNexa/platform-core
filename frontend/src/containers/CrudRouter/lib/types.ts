@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type CrudFieldType = "text" | "textarea" | "email" | "tel" | "password" | "number" | "checkbox" | "select" | "date" | "datetime";
+export type CrudFieldType = "text" | "textarea" | "email" | "tel" | "password" | "number" | "checkbox" | "select" | "date" | "datetime" | "file";
 
 export interface CrudFieldOption {
   value: string;
@@ -23,6 +23,8 @@ export interface CrudField<T> {
   /** Shown under the input (`.form-hint`) - from the schema's `help_text`. */
   helpText?: string;
   autoComplete?: string;
+  /** Only on a `file` field - the picker's `accept` list (`SchemaField.accept`). The form holds a `File` once one is picked (the stored name, a string, while editing an unchanged row) and submits as multipart. */
+  accept?: string;
   /** Only meaningful when `type === "select"` - the `<option>` list. Populated synchronously from a `SchemaField`'s own `choices` (an enum) by `createSchemaFields`; for a relation field (see `relatedEndpoint`) it starts empty and is filled in asynchronously by `CrudCreateForm`/`CrudEditForm` once `fetchRelationOptions` resolves. */
   options?: CrudFieldOption[];
   /** Only on a `select` field - the choice a new row gets when it's left out (`SchemaField.default`), shown preselected until one is picked. Display only: an untouched field is still omitted, so the server's own default applies. */
