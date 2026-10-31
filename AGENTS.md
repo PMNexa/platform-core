@@ -873,6 +873,16 @@ resource, it's all from the schema.
   can't carry a binary; the row is made by the agent, the file added in
   the UI. Validation (type, size) is the resource's own, in its
   serializer's `validate`.
+- **Lists** (`type: "list"`, a serializer-declared `ListField`): a
+  structured value written inline with the row - e.g. a concept's
+  evidence, `[{chunk, role}]`. `items` describes one element: a plain
+  field's description, or `{type: "object", fields: [...]}` for a nested
+  `Serializer` child. The generic form leaves list fields out (no control
+  for them - `schemaFields.ts`'s `isWritable`); a resource's own widget
+  (`registerFieldWidget`) or its MCP tools write them (platform-mcp maps
+  them to a JSON array of objects). The detail page shows one as plain
+  "key: value" text. The viewset reads the value from
+  `validated_data` under the field's `source` and stores it itself.
 - `schema` tags each to-many `DynamicRelationField` backed by a real
   model relation with `kind` (`one_to_many` = reverse FK,
   `many_to_many` = M2M either side) and `back_filter` - the lookup on

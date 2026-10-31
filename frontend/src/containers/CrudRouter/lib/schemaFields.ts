@@ -14,6 +14,9 @@ function isWritable(field: SchemaField): boolean {
   // the same exclusion).
   if (field.type === "relation") return !field.many;
   if (field.read_only) return false;
+  // A structured list has no generic control: a resource's own widget
+  // (`registerFieldWidget`) or its MCP tools write it; the form leaves it alone.
+  if (field.type === "list") return false;
   return true;
 }
 

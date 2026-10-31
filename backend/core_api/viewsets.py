@@ -45,6 +45,10 @@ _FIELD_TYPES = (
     # An upload: sent as multipart (the generic form switches to it), read
     # back as the stored name, fetched from `<resource>/<id>/files/<field>`.
     (drf_serializers.FileField, "file"),
+    # A structured list (a serializer-declared `ListField`): `items`
+    # describes one element. The generic form has no control for it; a
+    # resource's own screens/MCP tools write it.
+    (drf_serializers.ListField, "list"),
     (drf_serializers.CharField, "string"),
     (drf_serializers.UUIDField, "string"),
 )
@@ -106,6 +110,16 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
         # What the file picker offers (`style={"accept": ".pdf,.epub"}` on
         # the serializer field) - a hint for the form; the server validates.
         description["accept"] = field.style["accept"]
+    if isinstance(field, drf_serializers.ListField):
+        child = field.child
+        if isinstance(child, drf_serializers.BaseSerializer):
+            description["items"] = {
+                "type": "object",
+                "fields": [_describe_field(n, f, deferred=False) for n, f in child.fields.items()],
+            }
+        else:
+            description["items"] = _describe_field("item", child, deferred=False)
+            description["items"].pop("name")
     if isinstance(field, drf_serializers.ChoiceField):
         description["choices"] = [{"value": value, "label": str(label)} for value, label in field.choices.items()]
         default = _choice_default(field, model)

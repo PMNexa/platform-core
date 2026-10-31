@@ -16,7 +16,11 @@ export interface SchemaFieldChoice {
   label: string;
 }
 
-export type SchemaFieldType = "string" | "integer" | "number" | "boolean" | "date" | "datetime" | "email" | "file" | "relation";
+export type SchemaListItems =
+  | { type: "object"; fields: SchemaField[] }
+  | (Omit<SchemaField, "name" | "items"> & { type: Exclude<SchemaFieldType, "list" | "relation"> });
+
+export type SchemaFieldType = "string" | "integer" | "number" | "boolean" | "date" | "datetime" | "email" | "file" | "list" | "relation";
 
 export interface SchemaField {
   name: string;
@@ -34,6 +38,8 @@ export interface SchemaField {
   help_text?: string;
   /** Only on a `file` field - what the file picker offers (`<input accept>`, e.g. `".pdf,.epub"`). The server validates either way. A `file` field reads back as the stored name; its content is at `<endpoint>/<id>/files/<name>`. */
   accept?: string;
+  /** Only on a `list` field - one element: a plain value's description, or `{type: "object", fields}` for a nested row. The generic form has no control for lists; a resource's own widget or MCP tools write them. */
+  items?: SchemaListItems;
   /** Only present on a `ChoiceField` (e.g. a model's `TextChoices` status). */
   choices?: SchemaFieldChoice[];
   /** Only on a `ChoiceField` whose default is known - what a new row gets when the field is left out. */
