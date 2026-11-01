@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardBody, CardHeader, CardTitle } from "../components";
+import { Alert, Card, CardBody, CardHeader, CardTitle } from "../components";
 import { emailApi, type EmailCategoryChoice } from "./api";
 import EmailCategoryList from "./EmailCategoryList";
 
@@ -58,7 +58,7 @@ function EmailPreferencesScreen({ accessToken }: EmailPreferencesScreenProps) {
             Choose what we email you about. Account emails - confirming your address, resetting your password,
             security notices - are always sent.
           </p>
-          {error && <div className="alert alert-danger">{error}</div>}
+          {error && <Alert variant="danger">{error}</Alert>}
           {!categories ? (
             !error && <div className="text-secondary">Loading…</div>
           ) : categories.length === 0 ? (

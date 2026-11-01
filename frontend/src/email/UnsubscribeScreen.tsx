@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, CardBody } from "../components";
+import { Alert, Button, Card, CardBody } from "../components";
 import { unsubscribeApi, type EmailCategoryChoice } from "./api";
 import EmailCategoryList from "./EmailCategoryList";
 
@@ -63,8 +63,8 @@ function UnsubscribeScreen({ token }: UnsubscribeScreenProps) {
         <h1 className="h2 text-center mb-4">Email preferences</h1>
         <Card>
           <CardBody>
-            {error && <div className="alert alert-danger">{error}</div>}
-            {notice && <div className="alert alert-success">{notice}</div>}
+            {error && <Alert variant="danger">{error}</Alert>}
+            {notice && <Alert variant="success">{notice}</Alert>}
             {!categories ? (
               !error && <div className="text-secondary">Loading…</div>
             ) : (

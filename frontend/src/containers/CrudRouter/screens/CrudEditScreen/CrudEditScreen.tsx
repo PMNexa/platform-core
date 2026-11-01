@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { Button, Card, CardBody, CardFooter } from "../../../../components";
+import { Alert, Button, Card, CardBody, CardFooter, Spinner } from "../../../../components";
 import { createBaseApi } from "../../lib/baseApi";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
 import { pickFieldValues } from "../../lib/fields";
@@ -63,9 +63,9 @@ function CrudEditScreen<T>({ baseUrl, accessToken, id, onUpdated, onDeleted, for
     return (
       <Card>
         <CardBody>
-          <p className="text-danger mb-0" role="alert">
+          <Alert variant="danger" className="mb-0">
             {error.message}
-          </p>
+          </Alert>
         </CardBody>
       </Card>
     );
@@ -73,7 +73,7 @@ function CrudEditScreen<T>({ baseUrl, accessToken, id, onUpdated, onDeleted, for
     return (
       <Card>
         <CardBody>
-          <p className="text-secondary mb-0">Loading…</p>
+          <Spinner />
         </CardBody>
       </Card>
     );
@@ -149,7 +149,7 @@ function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, f
     return (
       <Card>
         <CardBody>
-          <p className="text-secondary mb-0">Loading…</p>
+          <Spinner />
         </CardBody>
       </Card>
     );
@@ -157,9 +157,9 @@ function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, f
     return (
       <Card>
         <CardBody>
-          <p className="text-danger mb-0" role="alert">
+          <Alert variant="danger" className="mb-0">
             {loadError.message}
-          </p>
+          </Alert>
         </CardBody>
       </Card>
     );
@@ -170,9 +170,9 @@ function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, f
         <CardBody>
           <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={formLayout ?? schema.form_layout} />
           {form.error && (
-            <p className="text-danger mb-0" role="alert">
+            <Alert variant="danger" className="mb-0">
               {formErrorMessage(form.error, fields)}
-            </p>
+            </Alert>
           )}
         </CardBody>
         <CardFooter className="d-flex gap-2">

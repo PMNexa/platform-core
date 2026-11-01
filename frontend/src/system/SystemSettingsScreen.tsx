@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, CardBody, CardHeader, CardTitle, FormControl } from "../components";
+import { Alert, Badge, Button, Card, CardBody, CardHeader, CardTitle, FormControl } from "../components";
 import { systemApi, type InfoGroup, type SystemSetting } from "./api";
 
 export interface SystemSettingsScreenProps {
@@ -26,12 +26,12 @@ function sameValue(a: unknown, b: unknown): boolean {
 function SourceBadge({ setting }: { setting: SystemSetting }) {
   if (setting.source === "env")
     return (
-      <span className="badge bg-azure-lt" title="Change it where the app is deployed - it can't be changed here.">
+      <Badge color="azure" title="Change it where the app is deployed - it can't be changed here.">
         Set by {setting.env}
-      </span>
+      </Badge>
     );
-  if (setting.source === "saved") return <span className="badge bg-green-lt">Saved</span>;
-  return <span className="badge bg-secondary-lt">Default</span>;
+  if (setting.source === "saved") return <Badge color="green">Saved</Badge>;
+  return <Badge>Default</Badge>;
 }
 
 function SettingRow({
@@ -220,7 +220,7 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
     }
   }
 
-  if (error && settings === null) return <div className="alert alert-danger">{error}</div>;
+  if (error && settings === null) return <Alert variant="danger">{error}</Alert>;
   if (settings === null) return <div className="text-secondary">Loading…</div>;
 
   return (
@@ -300,7 +300,7 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
             </Button>
           </CardBody>
         </Card>
-        {error && <div className="alert alert-danger mb-0">{error}</div>}
+        {error && <Alert variant="danger" className="mb-0">{error}</Alert>}
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useState, type SubmitEvent } from "react";
 import Button from "../../../../components/atoms/Button";
+import Alert from "../../../../components/molecules/Alert";
+import Spinner from "../../../../components/atoms/Spinner";
 import FormControl from "../../../../components/atoms/FormControl";
 import FormCheck from "../../../../components/molecules/FormCheck";
 import Fieldset from "../../../../components/organisms/Fieldset";
@@ -135,7 +137,7 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
             className="mb-2"
           />
         )}
-        {candidates === null && <p className="text-secondary mb-0">Loading…</p>}
+        {candidates === null && <Spinner />}
         {candidates?.length === 0 && <p className="text-secondary mb-0">Nothing left to link.</p>}
         {candidates && candidates.length > 0 && (
           <div className="list-group list-group-flush overflow-auto mb-2" style={{ maxHeight: 280 }}>
@@ -161,9 +163,9 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
           </Fieldset>
         )}
         {form.error && (
-          <p className="text-danger mb-0" role="alert">
+          <Alert variant="danger" className="mb-0">
             {formErrorMessage(form.error, throughFields)}
-          </p>
+          </Alert>
         )}
       </form>
     </Modal>

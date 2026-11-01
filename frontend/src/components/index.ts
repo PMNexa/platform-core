@@ -14,6 +14,9 @@
 export { default as Avatar } from "./atoms/Avatar";
 export type { AvatarProps } from "./atoms/Avatar";
 
+export { default as Badge } from "./atoms/Badge";
+export type { BadgeColor, BadgeProps } from "./atoms/Badge";
+
 export { default as Brand } from "./atoms/Brand";
 export type { BrandProps } from "./atoms/Brand";
 
@@ -29,6 +32,9 @@ export type { CheckboxProps } from "./atoms/Checkbox";
 export { default as Icon } from "./atoms/Icon";
 export type { IconName, IconProps } from "./atoms/Icon";
 
+export { default as Spinner } from "./atoms/Spinner";
+export type { SpinnerProps } from "./atoms/Spinner";
+
 export { default as FormLabel } from "./atoms/FormLabel";
 export type { FormLabelProps } from "./atoms/FormLabel";
 
@@ -37,6 +43,9 @@ export type { FormControlProps } from "./atoms/FormControl";
 
 export { default as FormSelect } from "./atoms/FormSelect";
 export type { FormSelectProps, FormSelectSize } from "./atoms/FormSelect";
+
+export { default as Alert } from "./molecules/Alert";
+export type { AlertProps, AlertVariant } from "./molecules/Alert";
 
 export { default as CodeBlock } from "./molecules/CodeBlock";
 export type { CodeBlockProps } from "./molecules/CodeBlock";
@@ -62,6 +71,9 @@ export { default as Breadcrumb } from "./organisms/Breadcrumb";
 export * from "./organisms/Breadcrumb";
 
 export * from "./organisms/Card";
+
+export { default as EmptyState } from "./organisms/EmptyState";
+export type { EmptyStateProps } from "./organisms/EmptyState";
 
 export { default as Fieldset } from "./organisms/Fieldset";
 export type { FieldsetProps } from "./organisms/Fieldset";

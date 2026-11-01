@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardBody, CardHeader, CardTitle } from "../components";
+import { Alert, Badge, type BadgeColor, Card, CardBody, CardHeader, CardTitle } from "../components";
 import { systemApi, type SystemStatus } from "./api";
 
 export interface SystemStatusScreenProps {
@@ -7,10 +7,10 @@ export interface SystemStatusScreenProps {
 }
 
 const WHEN = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
-const STATE: Record<string, [string, string]> = {
-  ok: ["bg-green-lt", "Running"],
-  failing: ["bg-red-lt", "Failing"],
-  stopped: ["bg-yellow-lt", "Not running"],
+const STATE: Record<string, [BadgeColor, string]> = {
+  ok: ["green", "Running"],
+  failing: ["red", "Failing"],
+  stopped: ["yellow", "Not running"],
 };
 
 function Stat({ label, value, tone }: { label: string; value: number | string; tone?: string }) {
@@ -48,7 +48,7 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
     };
   }, [api]);
 
-  if (error && !status) return <div className="alert alert-danger">{error}</div>;
+  if (error && !status) return <Alert variant="danger">{error}</Alert>;
   if (!status) return <div className="text-secondary">Loading…</div>;
 
   return (
@@ -60,10 +60,10 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
           </CardHeader>
           {status.jobs.length === 0 ? (
             <CardBody>
-              <div className="alert alert-warning mb-0">
-                No background job has ever reported in - reminders, digests and email retries aren't running. Start the
-                scheduler service (<code>manage.py goalnexa_jobs --loop 300</code>).
-              </div>
+              <Alert variant="warning" className="mb-0">
+                No background job has ever reported in - scheduled work (the app's jobs, digests, email retries) isn't
+                running. Start the app's scheduler service.
+              </Alert>
             </CardBody>
           ) : (
             <div className="table-responsive">
@@ -83,7 +83,7 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
                     <tr key={job.name}>
                       <td className="font-monospace">{job.name}</td>
                       <td>
-                        <span className={`badge ${STATE[job.state][0]}`}>{STATE[job.state][1]}</span>
+                        <Badge color={STATE[job.state][0]}>{STATE[job.state][1]}</Badge>
                         {job.last_error && <div className="small text-danger mt-1">{job.last_error}</div>}
                       </td>
                       <td>{WHEN.format(new Date(job.last_run_at))}</td>

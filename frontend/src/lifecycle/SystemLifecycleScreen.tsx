@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, CardHeader, CardTitle, Modal } from "../components";
+import { Alert, Badge, Button, Card, CardHeader, CardTitle, Modal } from "../components";
 import { lifecycleApi, type LifecycleOverview, type LifecyclePreview, type LifecycleStepNumbers } from "./api";
 
 export interface SystemLifecycleScreenProps {
@@ -65,7 +65,7 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
     };
   }, [api, days]);
 
-  if (error && !data) return <div className="alert alert-danger">{error}</div>;
+  if (error && !data) return <Alert variant="danger">{error}</Alert>;
   if (!data) return <div className="text-secondary">Loading…</div>;
   const base = `/${basePath.replace(/^\/+|\/+$/g, "")}`;
 
@@ -86,14 +86,13 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
       </div>
       {data.problems.length > 0 && (
         <div className="col-12">
-          <div className="alert alert-warning mb-0">
-            <div className="fw-bold">Nothing is being sent:</div>
+          <Alert variant="warning" title="Nothing is being sent" className="mb-0">
             <ul className="mb-0">
               {data.problems.map((problem) => (
                 <li key={problem}>{problem}</li>
               ))}
             </ul>
-          </div>
+          </Alert>
         </div>
       )}
       {data.journeys.map((journey) => (
@@ -102,7 +101,7 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
             <CardHeader>
               <div>
                 <CardTitle>
-                  {journey.label} <span className="badge bg-secondary-lt ms-1">{journey.category}</span>
+                  {journey.label} <Badge className="ms-1">{journey.category}</Badge>
                 </CardTitle>
                 <div className="small text-secondary">{journey.description}</div>
               </div>
@@ -261,15 +260,15 @@ function PreviewModal({
           Render
         </Button>
       </form>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {notice && <div className="alert alert-success">{notice}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
+      {notice && <Alert variant="success">{notice}</Alert>}
       {!preview ? (
         <div className="text-secondary">Loading…</div>
       ) : preview.skipped ? (
-        <div className="alert alert-info mb-0">
+        <Alert variant="info" className="mb-0">
           Skipped for this user - the step's condition doesn't hold for them right now (e.g. they already did what it
           asks).
-        </div>
+        </Alert>
       ) : (
         <>
           <div className="d-flex align-items-center mb-2">

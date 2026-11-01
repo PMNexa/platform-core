@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import Button from "../../../../components/atoms/Button";
+import Alert from "../../../../components/molecules/Alert";
+import Spinner from "../../../../components/atoms/Spinner";
 import Modal from "../../../../components/organisms/Modal";
 import type { BaseApiRequest } from "../../lib/baseApi";
 import { pickFieldValues } from "../../lib/fields";
@@ -93,19 +95,19 @@ function CrudFormModalBody({ title, fields: baseFields, request, load, submitLab
         </>
       }
     >
-      {loading && <p className="text-secondary mb-0">Loading…</p>}
+      {loading && <Spinner />}
       {loadError && (
-        <p className="text-danger mb-0" role="alert">
+        <Alert variant="danger" className="mb-0">
           {loadError.message}
-        </p>
+        </Alert>
       )}
       {!loading && !loadError && (
         <form id={formId} onSubmit={handleSubmit} noValidate>
           <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={layout} />
           {form.error && (
-            <p className="text-danger mb-0" role="alert">
+            <Alert variant="danger" className="mb-0">
               {formErrorMessage(form.error, fields)}
-            </p>
+            </Alert>
           )}
         </form>
       )}

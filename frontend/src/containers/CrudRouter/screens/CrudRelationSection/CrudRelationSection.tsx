@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Button from "../../../../components/atoms/Button";
+import Alert from "../../../../components/molecules/Alert";
+import Spinner from "../../../../components/atoms/Spinner";
 import Icon from "../../../../components/atoms/Icon";
 import FormControl from "../../../../components/atoms/FormControl";
 import { CardFooter } from "../../../../components/organisms/Card";
@@ -77,17 +79,16 @@ function CrudRelationSection(props: CrudRelationSectionProps) {
   if (error)
     return (
       <div className="card-body">
-        <p className="text-danger mb-0" role="alert">
+        <Alert variant="danger" className="mb-0">
           {error.message}
-        </p>
+        </Alert>
       </div>
     );
   if (!schema)
     return (
-      <div className="card-body d-flex align-items-center gap-2 text-secondary">
-        <span className="spinner-border spinner-border-sm" aria-hidden="true" />
-        Loading…
-      </div>
+      <div className="card-body">
+          <Spinner />
+        </div>
     );
   return <CrudRelationTable {...props} relatedApi={relatedApi} schema={schema} />;
 }
@@ -275,9 +276,8 @@ function CrudRelationTable({
   return (
     <>
       {isFirstLoad ? (
-        <div className="card-body d-flex align-items-center gap-2 text-secondary">
-          <span className="spinner-border spinner-border-sm" aria-hidden="true" />
-          Loading…
+        <div className="card-body">
+          <Spinner />
         </div>
       ) : isEmpty ? (
         <div className="empty py-5">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, CardFooter, CardHeader, DefaultLink, FormControl, Icon, Pagination } from "../../../../components";
+import { Alert, Badge, Button, Card, CardFooter, CardHeader, DefaultLink, EmptyState, FormControl, Icon, Pagination, Spinner } from "../../../../components";
 import type { LinkComponent } from "../../../../components";
 import { ColumnPicker, DataTable, useDataTable } from "../../../DataTable";
 import type { DataTableColumn } from "../../../DataTable";
@@ -84,11 +84,11 @@ function CrudListScreen<T>({ baseUrl, accessToken, basePath, linkComponent, sear
 
   if (error)
     return (
-      <p className="text-danger" role="alert">
+      <Alert variant="danger" className="mb-0">
         {error.message}
-      </p>
+      </Alert>
     );
-  if (!schema) return <p className="text-secondary">Loading…</p>;
+  if (!schema) return <Spinner />;
 
   return (
     <CrudListScreenTable
@@ -263,6 +263,45 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
     table.setFilters(filterParams(schema, next));
   }
 
+  // Where the rows would be when there are none: "nothing matches" (a
+  // search or filter is on - offer to clear it) is a different message
+  // from "nothing exists yet" (offer the New link).
+  const plural = schema.label_plural ?? "rows";
+  const narrowed = table.search.trim() !== "" || conditions.length > 0;
+  const emptyState = narrowed ? (
+    <EmptyState
+      size="sm"
+      title={`No ${plural} match.`}
+      description="Try another search, or clear the filters."
+      action={
+        <Button
+          type="button"
+          variant="secondary"
+          outline
+          onClick={() => {
+            table.setSearch("");
+            applyFilters([]);
+          }}
+        >
+          Clear search and filters
+        </Button>
+      }
+    />
+  ) : (
+    <EmptyState
+      size="sm"
+      title={`No ${plural} yet.`}
+      action={
+        canDo(schema, "create") ? (
+          <Link to={paths.createPath} className="btn btn-primary btn-sm">
+            <Icon name="plus" />
+            New{schema.label ? ` ${schema.label}` : ""}
+          </Link>
+        ) : undefined
+      }
+    />
+  );
+
   return (
     <Card>
       <CardHeader className="d-flex align-items-center gap-2">
@@ -286,7 +325,11 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
           <Button type="button" variant="secondary" outline className="flex-shrink-0 text-nowrap" onClick={() => setFiltering(true)}>
             <Icon name="filter" />
             Filter
-            {conditions.length > 0 && <span className="badge bg-primary text-primary-fg ms-1">{conditions.length}</span>}
+            {conditions.length > 0 && (
+              <Badge color="primary" light={false} className="ms-1">
+                {conditions.length}
+              </Badge>
+            )}
           </Button>
           <ColumnPicker
             columns={table.orderedColumns}
@@ -303,7 +346,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
             if (!field) return null;
             const text = describeCondition(field, condition);
             return (
-              <span key={index} className="badge bg-secondary-lt d-inline-flex align-items-center gap-1">
+              <Badge key={index} className="d-inline-flex align-items-center gap-1">
                 {text}
                 <button
                   type="button"
@@ -312,7 +355,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
                   aria-label={`Remove filter ${text}`}
                   onClick={() => applyFilters(conditions.filter((_, i) => i !== index))}
                 />
-              </span>
+              </Badge>
             );
           })}
           <Button type="button" variant="link" className="p-0" onClick={() => applyFilters([])}>
@@ -332,7 +375,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
           }}
         />
       )}
-      <DataTable table={table} />
+      <DataTable table={table} empty={emptyState} />
       <CardFooter>
         <Pagination
           page={table.page}

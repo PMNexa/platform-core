@@ -1,4 +1,5 @@
 import type { EmailCategoryChoice } from "./api";
+import { Badge } from "../components";
 
 export interface EmailCategoryListProps {
   categories: EmailCategoryChoice[];
@@ -16,7 +17,7 @@ function EmailCategoryList({ categories, onToggle, disabled, highlight }: EmailC
         <label key={category.key} className="row g-2 align-items-start py-2 m-0" style={{ cursor: "pointer" }}>
           <span className="col">
             <span className="fw-medium">{category.label}</span>
-            {highlight === category.key && <span className="badge bg-azure-lt ms-2">This email</span>}
+            {highlight === category.key && <Badge color="azure" className="ms-2">This email</Badge>}
             {category.help && <span className="d-block small text-secondary">{category.help}</span>}
           </span>
           <span className="col-auto">

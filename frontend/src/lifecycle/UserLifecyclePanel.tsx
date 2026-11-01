@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardBody, CardHeader, CardTitle } from "../components";
+import { Badge, Card, CardBody, CardHeader, CardTitle } from "../components";
 import type { EmailCategoryChoice } from "../email/api";
 import { lifecycleApi, type LifecycleSendRow } from "./api";
 
@@ -66,7 +66,7 @@ function UserLifecyclePanel({ accessToken, userId }: UserLifecyclePanelProps) {
                       <code>
                         {send.journey}.{send.step}
                       </code>
-                      {send.holdout && <span className="badge bg-secondary-lt ms-2">holdout - not sent</span>}
+                      {send.holdout && <Badge className="ms-2">holdout - not sent</Badge>}
                     </div>
                   </td>
                   <td className="small">

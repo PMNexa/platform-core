@@ -233,6 +233,13 @@ beside the sidebar, no max-width (it was `.container-xl`, capped at
 container entirely looked like "the whole app has no left/right
 padding," not obviously a missing class one level up.
 
+**`brand` is required and has no default** - it's the host's identity
+(its name, or a logo node), so this package never invents one. It used to
+default to `"GoalNexa"`, which silently branded any other host (Chapterwise
+shipped with "GoalNexa" in its sidebar until Storybook showed it); a host
+passes `brand` on both of its shells. A string folds to its first letter
+on the icon rail; a node is shown as-is, so keep a node rail-sized.
+
 ### Modal (`components/organisms/Modal/Modal.tsx`)
 
 Tabler's modal markup rendered by React, with open/closed as plain host
@@ -256,6 +263,59 @@ viewport). A `Modal` opened inside it stacks above it, and Escape closes
 only that modal: the drawer ignores Escape while `body.modal-open` is
 set. goalnexa's dashboard uses it to show `CrudDetailScreen`; `"."` also
 exports `useResourcePath` for a host route like that one.
+
+### Badge (`components/atoms/Badge/Badge.tsx`)
+
+Tabler's `.badge` - `color` (Tabler's color names; `@default
+"secondary"`, the neutral grey), `light` (`@default true` - the
+`bg-{color}-lt` tint with colored text, what every status here uses;
+`false` is the solid fill plus Tabler's matching `text-{color}-fg`),
+`pill`, `wrap` (a long choice label wraps inside its cell), `title`.
+Every status/label badge in `containers/` and the admin screens renders
+this - a choice or boolean on a detail page, a relation tab's count, the
+filter counter and chips on a list, a setting's source, a job's state -
+so "ready"/"running"/"failed" read the same everywhere instead of each
+screen picking its own `bg-*-lt` class. Text only; an icon-only badge
+would need an accessible name this doesn't take.
+
+### Spinner (`components/atoms/Spinner/Spinner.tsx`)
+
+Tabler's `.spinner-border` and its label as ONE `role="status"` element
+- `label` (`@default "Loading…"`), `hideLabel` (spinner only; the label
+stays `visually-hidden`), `size` (`sm` default, `md` Tabler's plain).
+Every "Loading…" in `containers/` and the admin screens is this, not a
+bare `<p>Loading…</p>` (announced to nobody) or a hand-rolled spinner +
+text pair (the detail screen and the relation section each had one).
+Inline flex, so it sits wherever the content it stands in for will;
+tests keep matching `getByText("Loading…")` since the label is visible.
+
+### Alert (`components/molecules/Alert/Alert.tsx`)
+
+Tabler's `.alert` - `variant` (`danger`/`success`/`warning`/`info`/
+`primary`/`secondary`), optional `title` (`.alert-title` above the
+body), `onDismiss` (renders the close button; the HOST hides the alert -
+it owns whether it's shown, same rule as `Modal`'s `open`), `role`
+(`@default "alert"` for `danger` - announced at once - and `"status"` for
+the rest, announced politely). Every `<div className="alert
+alert-...">` and `<p className="text-danger" role="alert">` in
+`containers/`, `system/`, `email/` and `lifecycle/` goes through this,
+so a failed request looks and is announced the same on every screen.
+`AnnouncementBanner` is one with `onDismiss`. Not for a transient
+notification - nothing here auto-hides.
+
+### EmptyState (`components/organisms/EmptyState/EmptyState.tsx`)
+
+Tabler's `.empty` - `title`, optional `description`, `icon`, `action`
+(the way out: a "New …" link, a "Clear filters" button), `size`
+(`md` Tabler's own page spacing; `sm` tighter, for inside a card where a
+table's rows would be). A bare "No results." leaves the reader guessing
+whether nothing exists yet or nothing matched; this says which and
+hands over the next step. `DataTable` renders `<EmptyState size="sm"
+title="No results." />` where its rows would be unless its `empty`
+prop says otherwise, and `CrudListScreen` passes its own: "No
+<label_plural> yet." with the resource's "New" link (when the schema's
+`can.create` allows), or - once a search or filter is on - "No
+<label_plural> match." with a button that clears both.
 
 ### Breadcrumb (`components/organisms/Breadcrumb/Breadcrumb.tsx`)
 

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode, type SubmitEvent } from "react";
 import Button from "../../../../components/atoms/Button";
+import Alert from "../../../../components/molecules/Alert";
+import Badge from "../../../../components/atoms/Badge";
+import Spinner from "../../../../components/atoms/Spinner";
 import Icon from "../../../../components/atoms/Icon";
 import Breadcrumb from "../../../../components/organisms/Breadcrumb";
 import { Card, CardBody, CardFooter, CardHeader } from "../../../../components/organisms/Card";
@@ -116,14 +119,11 @@ function Message({ error }: { error?: Error }) {
     <Card>
       <CardBody>
         {error ? (
-          <p className="text-danger mb-0" role="alert">
+          <Alert variant="danger" className="mb-0">
             {error.message}
-          </p>
+          </Alert>
         ) : (
-          <div className="d-flex align-items-center gap-2 text-secondary">
-            <span className="spinner-border spinner-border-sm" aria-hidden="true" />
-            Loading…
-          </div>
+          <Spinner />
         )}
       </CardBody>
     </Card>
@@ -255,9 +255,13 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
   function renderValue(field: SchemaField): ReactNode {
     const value = record?.[field.name];
     if (value == null || value === "") return <span className="text-secondary">—</span>;
-    if (field.choices?.length) return <span className="badge bg-blue-lt text-wrap text-start mw-100" style={{ lineHeight: 1.3 }}>{formatFieldValue(field, value)}</span>;
-    if (field.type === "boolean")
-      return <span className={`badge ${value ? "bg-green-lt" : "bg-secondary-lt"}`}>{formatFieldValue(field, value)}</span>;
+    if (field.choices?.length)
+      return (
+        <Badge color="blue" wrap>
+          {formatFieldValue(field, value)}
+        </Badge>
+      );
+    if (field.type === "boolean") return <Badge color={value ? "green" : "secondary"}>{formatFieldValue(field, value)}</Badge>;
     if (field.type === "file")
       return <FileValue name={formatFieldValue(field, value)} download={() => baseApi.file(id, field.name)} />;
     if (field.type !== "relation") return formatFieldValue(field, value);
@@ -338,9 +342,9 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
                   >
                     {relation.label}
                     {count !== undefined && (
-                      <span className={`badge badge-pill ms-2 ${selected ? "bg-primary text-primary-fg" : "bg-secondary-lt text-secondary"}`}>
+                      <Badge pill color={selected ? "primary" : "secondary"} light={!selected} className="ms-2">
                         {count}
-                      </span>
+                      </Badge>
                     )}
                   </button>
                 </li>
@@ -437,9 +441,9 @@ function DetailEditForm({
       <CardBody>
         <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={layout} />
         {form.error && (
-          <p className="text-danger mb-0" role="alert">
+          <Alert variant="danger" className="mb-0">
             {formErrorMessage(form.error, fields)}
-          </p>
+          </Alert>
         )}
       </CardBody>
       <CardFooter className="d-flex gap-2">

@@ -9,7 +9,8 @@ export interface DashboardLayoutProps {
   navItems: NavEntry[];
   currentPath: string;
   linkComponent?: LinkComponent;
-  brand?: ReactNode;
+  /** The app's name or logo at the top of the sidebar - the host's identity, so no default (a string folds to its initial with the sidebar; a node is shown as-is). */
+  brand: ReactNode;
   user?: AppShellUser | null;
   onLogout?: () => void;
   /** The header's user dropdown entries, above "Log out" - e.g. switch organization, account links. */
@@ -109,7 +110,7 @@ function DashboardLayout({
   navItems,
   currentPath,
   linkComponent = DefaultLink,
-  brand = "GoalNexa",
+  brand,
   user,
   onLogout,
   userMenu,

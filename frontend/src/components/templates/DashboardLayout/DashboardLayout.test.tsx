@@ -5,7 +5,7 @@ import DashboardLayout from "./DashboardLayout";
 describe("DashboardLayout", () => {
   it("renders the sidebar's nav items and the children content", () => {
     render(
-      <DashboardLayout navItems={[{ label: "Home", to: "/" }]} currentPath="/">
+      <DashboardLayout brand="App" navItems={[{ label: "Home", to: "/" }]} currentPath="/">
         <p>page content</p>
       </DashboardLayout>,
     );
@@ -13,13 +13,13 @@ describe("DashboardLayout", () => {
     expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
   });
 
-  it("defaults the brand to GoalNexa", () => {
+  it("shows the host's brand, linking home", () => {
     render(
-      <DashboardLayout navItems={[]} currentPath="/">
+      <DashboardLayout brand="Chapterwise" navItems={[]} currentPath="/">
         <div />
       </DashboardLayout>,
     );
-    expect(screen.getByRole("link", { name: "GoalNexa" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Chapterwise" })).toHaveAttribute("href", "/");
   });
 
   describe("sidebar folding", () => {
@@ -38,7 +38,7 @@ describe("DashboardLayout", () => {
 
     it("toggles the sidebar fold from the header and remembers it", () => {
       const { unmount } = render(
-        <DashboardLayout navItems={[{ label: "Home", to: "/" }]} currentPath="/">
+        <DashboardLayout brand="App" navItems={[{ label: "Home", to: "/" }]} currentPath="/">
           <div />
         </DashboardLayout>,
       );
@@ -49,7 +49,7 @@ describe("DashboardLayout", () => {
       unmount();
 
       render(
-        <DashboardLayout navItems={[{ label: "Home", to: "/" }]} currentPath="/">
+        <DashboardLayout brand="App" navItems={[{ label: "Home", to: "/" }]} currentPath="/">
           <div />
         </DashboardLayout>,
       );
@@ -61,7 +61,7 @@ describe("DashboardLayout", () => {
     it("collapses a nav group and remembers it", () => {
       const nav = [{ label: "Access", children: [{ label: "Users", to: "/users" }] }];
       const { unmount } = render(
-        <DashboardLayout navItems={nav} currentPath="/">
+        <DashboardLayout brand="App" navItems={nav} currentPath="/">
           <div />
         </DashboardLayout>,
       );
@@ -73,7 +73,7 @@ describe("DashboardLayout", () => {
       unmount();
 
       render(
-        <DashboardLayout navItems={nav} currentPath="/">
+        <DashboardLayout brand="App" navItems={nav} currentPath="/">
           <div />
         </DashboardLayout>,
       );
@@ -82,7 +82,7 @@ describe("DashboardLayout", () => {
   });
 
   it("narrows the sidebar through Tabler's width variable", () => {
-    const { container } = render(<DashboardLayout navItems={[]} currentPath="/">content</DashboardLayout>);
+    const { container } = render(<DashboardLayout brand="App" navItems={[]} currentPath="/">content</DashboardLayout>);
     expect((container.querySelector(".page") as HTMLElement).style.getPropertyValue("--tblr-sidebar-width")).toBe("13rem");
   });
 });

@@ -1,4 +1,8 @@
+import type { ReactNode } from "react";
 import FormControl from "../../components/atoms/FormControl";
+import Spinner from "../../components/atoms/Spinner";
+import Alert from "../../components/molecules/Alert";
+import EmptyState from "../../components/organisms/EmptyState";
 import Pagination from "../../components/organisms/Pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../../components/organisms/Table";
 import ColumnPicker from "./ColumnPicker";
@@ -16,9 +20,14 @@ function headerWithHint<T>(column: DataTableColumn<T>) {
   );
 }
 
+/** What to render where the rows would be when the page is empty - a caller that knows what the rows are says so (`CrudListScreen`: the resource's name, its "New" link). @default an `EmptyState` reading "No results." */
+interface DataTableEmpty {
+  empty?: ReactNode;
+}
+
 export type DataTableProps<T> =
-  | { config: DataTableConfig<T>; table?: undefined }
-  | {
+  | ({ config: DataTableConfig<T>; table?: undefined } & DataTableEmpty)
+  | ({
       /**
        * A `useDataTable(config)` instance the CALLER already owns -
        * lets a host render its own UI (e.g. `CrudListScreen` puts the
@@ -38,7 +47,7 @@ export type DataTableProps<T> =
        */
       table: DataTableState<T>;
       config?: undefined;
-    };
+    } & DataTableEmpty);
 
 /**
  * The feature: `Table`'s presentational pieces (`components/organisms/
@@ -51,16 +60,16 @@ export type DataTableProps<T> =
  * not one `if` inside a single component's body.
  */
 function DataTable<T>(props: DataTableProps<T>) {
-  if (props.table) return <DataTableView table={props.table} bare />;
-  return <DataTableWithOwnState config={props.config} />;
+  if (props.table) return <DataTableView table={props.table} bare empty={props.empty} />;
+  return <DataTableWithOwnState config={props.config} empty={props.empty} />;
 }
 
-function DataTableWithOwnState<T>({ config }: { config: DataTableConfig<T> }) {
+function DataTableWithOwnState<T>({ config, empty }: { config: DataTableConfig<T> } & DataTableEmpty) {
   const table = useDataTable(config);
-  return <DataTableView table={table} />;
+  return <DataTableView table={table} empty={empty} />;
 }
 
-function DataTableView<T>({ table, bare = false }: { table: DataTableState<T>; bare?: boolean }) {
+function DataTableView<T>({ table, bare = false, empty }: { table: DataTableState<T>; bare?: boolean } & DataTableEmpty) {
   return (
     <div>
       {!bare && (
@@ -120,12 +129,8 @@ function DataTableView<T>({ table, bare = false }: { table: DataTableState<T>; b
         </Table>
       )}
 
-      {table.loading && <p className="text-secondary">Loading…</p>}
-      {table.error && (
-        <p className="text-danger" role="alert">
-          {table.error.message}
-        </p>
-      )}
+      {table.loading && <Spinner />}
+      {table.error && <Alert variant="danger">{table.error.message}</Alert>}
       {/* Distinct from "No results." (a legitimately empty dataset) -
           this is every column toggled off via ColumnPicker, not a data
           state at all. Without this, the table renders as a totally
@@ -142,7 +147,7 @@ function DataTableView<T>({ table, bare = false }: { table: DataTableState<T>; b
       {!table.loading &&
         !table.error &&
         table.visibleColumns.length > 0 &&
-        table.items.length === 0 && <p className="text-secondary">No results.</p>}
+        table.items.length === 0 && (empty ?? <EmptyState size="sm" title="No results." />)}
 
       {!bare && (
         <Pagination

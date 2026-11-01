@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { Button, Card, CardBody, CardFooter } from "../../../../components";
+import { Alert, Button, Card, CardBody, CardFooter, Spinner } from "../../../../components";
 import { createBaseApi } from "../../lib/baseApi";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
 import { pickFieldValues } from "../../lib/fields";
@@ -61,9 +61,9 @@ function CrudCreateScreen<T>({ baseUrl, accessToken, onCreated, formLayout }: Cr
     return (
       <Card>
         <CardBody>
-          <p className="text-danger mb-0" role="alert">
+          <Alert variant="danger" className="mb-0">
             {error.message}
-          </p>
+          </Alert>
         </CardBody>
       </Card>
     );
@@ -71,7 +71,7 @@ function CrudCreateScreen<T>({ baseUrl, accessToken, onCreated, formLayout }: Cr
     return (
       <Card>
         <CardBody>
-          <p className="text-secondary mb-0">Loading…</p>
+          <Spinner />
         </CardBody>
       </Card>
     );
@@ -110,9 +110,9 @@ function CrudCreateForm<T>({ baseApi, schema, request, onCreated, formLayout }: 
         <CardBody>
           <CrudFormFields fields={fields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} layout={formLayout ?? schema.form_layout} />
           {form.error && (
-            <p className="text-danger mb-0" role="alert">
+            <Alert variant="danger" className="mb-0">
               {formErrorMessage(form.error, fields)}
-            </p>
+            </Alert>
           )}
         </CardBody>
         <CardFooter>

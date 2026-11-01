@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, CardBody, CardHeader, CardTitle } from "../components";
+import { Alert, Button, Card, CardBody, CardHeader, CardTitle } from "../components";
 import { systemApi, type InsightBlock, type InsightCell, type Insights } from "./api";
 
 export interface SystemInsightsScreenProps {
@@ -258,7 +258,7 @@ function SystemInsightsScreen({ accessToken }: SystemInsightsScreenProps) {
           Export CSV
         </Button>
       </div>
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
       {!data ? (
         !error && <div className="text-secondary">Loading…</div>
       ) : (

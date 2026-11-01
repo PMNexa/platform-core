@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Alert } from "../components";
 import { systemApi, type Announcement } from "./api";
 
 const DISMISSED_KEY = "platform-system:dismissed-announcement";
@@ -34,21 +35,20 @@ export default function AnnouncementBanner({ accessToken }: { accessToken: strin
 
   if (!announcement?.text || hidden || dismissedId() === announcement.id) return null;
   return (
-    <div className={`alert alert-${announcement.level} alert-dismissible mb-3`} role="status">
+    <Alert
+      variant={announcement.level}
+      className="mb-3"
+      role="status"
+      onDismiss={() => {
+        try {
+          window.localStorage.setItem(DISMISSED_KEY, announcement.id);
+        } catch {
+          // Shown again next time - harmless.
+        }
+        setHidden(true);
+      }}
+    >
       <div style={{ whiteSpace: "pre-wrap" }}>{announcement.text}</div>
-      <button
-        type="button"
-        className="btn-close"
-        aria-label="Dismiss"
-        onClick={() => {
-          try {
-            window.localStorage.setItem(DISMISSED_KEY, announcement.id);
-          } catch {
-            // Shown again next time - harmless.
-          }
-          setHidden(true);
-        }}
-      />
-    </div>
+    </Alert>
   );
 }
