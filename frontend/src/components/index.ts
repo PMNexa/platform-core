@@ -58,6 +58,7 @@ export type { UserSummaryProps } from "./molecules/UserSummary";
 export { default as UserMenu } from "./molecules/UserMenu";
 export type { UserMenuProps } from "./molecules/UserMenu";
 
+export { default as Breadcrumb } from "./organisms/Breadcrumb";
 export * from "./organisms/Breadcrumb";
 
 export * from "./organisms/Card";
