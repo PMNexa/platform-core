@@ -360,6 +360,14 @@ and row selection are the CALLER's state (a `sort`/`onSort` pair per
 `TableHeaderCell`, a controlled `components/atoms/Checkbox` with
 `tableSelect` per row), these components never decide what "sorted" or
 "selected" means, only how it's styled.
+Long text: `TableCell`'s `clamp={n}` caps a cell at n lines and
+`CLAMP_MAX_WIDTH` (28rem) with an ellipsis, wraps spaceless values (URLs,
+hashes) instead of stretching the column, and `title` puts the full value
+on hover. `DataTable` clamps EVERY cell to `DEFAULT_CLAMP_LINES` (2) and
+titles long string cells; a column opts out with `clamp: false` (cells of
+buttons/badges/dropdowns - `overflow: hidden` would clip a menu) or sets
+its own line count, and `title: (row) => string` when its `render`
+returns JSX (CrudListScreen/CrudRelationSection pass the plain value).
 `components/atoms/Checkbox/Checkbox.tsx` (`tableSelect` prop →
 `.table-selectable-check`) is what pairs with `Table`'s `selectable`
 prop — Tabler's selected-row highlight is pure
@@ -916,7 +924,8 @@ resource, it's all from the schema.
   otherwise). Per field: `format: "uuid"` (a UUID - opaque id, not human
   text: a read-only one is hidden on the detail page and hidden-by-default
   as a list column) and `multiline` (a `TextField`: `<textarea>` in forms,
-  full-width block on the detail page).
+  full-width block on the detail page, a hidden-by-default list column
+  clamped like every other cell).
 - **Files** (`type: "file"`, a model `FileField`): the generic form shows
   a file picker (`accept` from `style={"accept": ".pdf,.epub"}` on the
   serializer field) and, once a `File` is among the values, submits the

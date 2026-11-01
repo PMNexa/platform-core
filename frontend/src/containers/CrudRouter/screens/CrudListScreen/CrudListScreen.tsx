@@ -210,6 +210,10 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
     ...schemaColumns.map((column) => ({
       ...column,
       className: ["position-relative", column.className].filter(Boolean).join(" "),
+      title: (row: T) => {
+        const value = column.render ? column.render(row) : (row as Record<string, unknown>)[column.key];
+        return typeof value === "string" ? value : undefined;
+      },
       render: (row: T) => (
         <>
           {rowLink(row)}
@@ -221,6 +225,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
       key: "__crud_actions",
       header: "",
       className: "w-1",
+      clamp: false,
       render: (row) => {
         const id = rowKey(row);
         const name = rowLabel(row as Record<string, unknown>, schema.display_field);

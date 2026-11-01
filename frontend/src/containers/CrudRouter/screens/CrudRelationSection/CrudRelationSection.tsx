@@ -191,6 +191,10 @@ function CrudRelationTable({
     ...schemaColumns.map((column) => ({
       ...column,
       className: ["position-relative", column.className].filter(Boolean).join(" "),
+      title: (row: Row) => {
+        const value = column.render ? column.render(row) : (row as Record<string, unknown>)[column.key];
+        return typeof value === "string" ? value : undefined;
+      },
       render: (row: Row) => (
         <>
           {/* Same per-cell `.stretched-link` decoy as CrudListScreen - see its docstring. */}
@@ -203,6 +207,7 @@ function CrudRelationTable({
       key: "__relation_actions",
       header: "",
       className: "w-1",
+      clamp: false,
       render: (row) => {
         const id = rowKey(row);
         const name = rowLabel(row, schema.display_field);

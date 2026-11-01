@@ -5,6 +5,15 @@ import Alert from "../../components/molecules/Alert";
 import EmptyState from "../../components/organisms/EmptyState";
 import Pagination from "../../components/organisms/Pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../../components/organisms/Table";
+
+/** Every cell is capped at this many lines unless its column says otherwise (`clamp`). */
+export const DEFAULT_CLAMP_LINES = 2;
+/** A text cell longer than this gets its full value as a hover tooltip. */
+const CLAMP_TITLE_MIN = 40;
+
+function cellTitle(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > CLAMP_TITLE_MIN ? value : undefined;
+}
 import ColumnPicker from "./ColumnPicker";
 import { sortDirectionForColumn } from "./lib/query";
 import type { DataTableColumn, DataTableConfig } from "./lib/types";
@@ -118,11 +127,21 @@ function DataTableView<T>({ table, bare = false, empty }: { table: DataTableStat
           <TableBody>
             {table.items.map((row) => (
               <TableRow key={table.rowKey(row)}>
-                {table.visibleColumns.map((column) => (
-                  <TableCell key={column.key} truncate={column.truncate} className={column.className}>
-                    {column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? "")}
-                  </TableCell>
-                ))}
+                {table.visibleColumns.map((column) => {
+                  const content = column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? "");
+                  const clamp = column.clamp === undefined ? DEFAULT_CLAMP_LINES : column.clamp || undefined;
+                  return (
+                    <TableCell
+                      key={column.key}
+                      truncate={column.truncate}
+                      clamp={clamp}
+                      title={cellTitle(column.title ? column.title(row) : content)}
+                      className={column.className}
+                    >
+                      {content}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>

@@ -31,6 +31,14 @@ export interface DataTableColumn<T> {
   hidden?: boolean;
   /** `Table`'s `TableCell` `truncate` prop. */
   truncate?: boolean;
+  /**
+   * Lines a cell may take before it's cut with an ellipsis (`TableCell`'s
+   * `clamp`, full text on hover) - `DEFAULT_CLAMP_LINES` when omitted;
+   * `false` lets the cell grow freely (e.g. a cell holding buttons or badges).
+   */
+  clamp?: number | false;
+  /** The cell's hover tooltip - defaults to the rendered text when it's a long string. */
+  title?: (row: T) => string | undefined;
   className?: string;
 }
 

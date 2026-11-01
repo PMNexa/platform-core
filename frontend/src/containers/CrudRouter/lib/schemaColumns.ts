@@ -62,7 +62,6 @@ export function createSchemaColumns<T>(
       // An opaque read-only id (e.g. `owner_id`) or long text is noise in
       // a row - still available through the column picker.
       hidden: (field.format === "uuid" && field.read_only && field.type !== "relation") || Boolean(field.multiline),
-      truncate: field.multiline,
       render: (row) => {
         const value = (row as Record<string, unknown>)[field.name];
         if (field.type === "relation")

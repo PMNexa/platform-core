@@ -92,4 +92,39 @@ describe("Table", () => {
     expect(value.closest("td")).toHaveClass("td-truncate");
     expect(value.closest("td")).toHaveAttribute("data-label", "Name");
   });
+
+  it("clamps a long cell to N lines with its full value on hover", () => {
+    render(
+      <table>
+        <TableBody>
+          <TableRow>
+            <TableCell clamp={2} title="The whole long value">
+              The whole long value
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </table>,
+    );
+    const value = screen.getByText("The whole long value", { selector: "div" });
+    expect(value).toHaveClass("td-clamp");
+    expect(value.style.webkitLineClamp).toBe("2");
+    expect(value.style.overflowWrap).toBe("anywhere");
+    expect(value.closest("td")).toHaveAttribute("title", "The whole long value");
+  });
+
+  it("truncate wins over clamp", () => {
+    render(
+      <table>
+        <TableBody>
+          <TableRow>
+            <TableCell clamp={2} truncate>
+              Value
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </table>,
+    );
+    expect(screen.getByText("Value")).toHaveClass("text-truncate");
+    expect(document.querySelector(".td-clamp")).toBeNull();
+  });
 });

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /**
  * Tabler's `.table` family (docs.tabler.io/ui/components/table), as
@@ -159,12 +159,44 @@ export interface TableCellProps {
   label?: string;
   /** `td-truncate` + an inner `.text-truncate` wrapper - stops one long value from stretching every column. */
   truncate?: boolean;
+  /**
+   * Caps the cell at this many lines and `CLAMP_MAX_WIDTH` wide, with an
+   * ellipsis - a long value (a title, a summary, a URL or id with no
+   * spaces) stays readable in a row instead of stretching its column or
+   * growing the row into a wall of text. Short values are untouched.
+   * Pair with `title` so the full value shows on hover. Ignored with `truncate`.
+   */
+  clamp?: number;
+  /** Native tooltip on the cell - the full value of a clamped/truncated cell. */
+  title?: string;
 }
 
-export function TableCell({ children, className, label, truncate }: TableCellProps) {
+/** How wide a clamped cell may grow before it wraps. */
+export const CLAMP_MAX_WIDTH = "28rem";
+
+function clampStyle(lines: number): CSSProperties {
+  return {
+    display: "-webkit-box",
+    WebkitLineClamp: lines,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    overflowWrap: "anywhere",
+    maxWidth: CLAMP_MAX_WIDTH,
+  };
+}
+
+export function TableCell({ children, className, label, truncate, clamp, title }: TableCellProps) {
+  let content = children;
+  if (truncate) content = <div className="text-truncate">{children}</div>;
+  else if (clamp && clamp > 0)
+    content = (
+      <div className="td-clamp" style={clampStyle(clamp)}>
+        {children}
+      </div>
+    );
   return (
-    <td className={classNames(truncate && "td-truncate", className)} data-label={label}>
-      {truncate ? <div className="text-truncate">{children}</div> : children}
+    <td className={classNames(truncate && "td-truncate", className)} data-label={label} title={title}>
+      {content}
     </td>
   );
 }

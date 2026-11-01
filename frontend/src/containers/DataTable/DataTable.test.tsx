@@ -102,4 +102,23 @@ describe("DataTable", () => {
       expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
     });
   });
+
+  it("clamps every cell by default, titles long text, and lets a column opt out", async () => {
+    const long = "A very long name ".repeat(10).trim();
+    const fetcher = vi.fn().mockResolvedValue(page([{ id: 1, name: long, status: "active" }]));
+    const columns: DataTableColumn<Row>[] = [
+      { key: "name", header: "Name" },
+      { key: "status", header: "Status", clamp: false },
+    ];
+    render(<DataTable config={{ endpoint: "/api/v1/orgs", columns, rowKey: (r) => r.id, fetcher }} />);
+
+    const name = await screen.findByText(long);
+    expect(name).toHaveClass("td-clamp");
+    expect(name.style.webkitLineClamp).toBe("2");
+    expect(name.closest("td")).toHaveAttribute("title", long);
+    const status = screen.getByText("active");
+    expect(status.tagName).toBe("TD");
+    expect(status).not.toHaveAttribute("title");
+  });
 });
+
