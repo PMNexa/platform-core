@@ -1,5 +1,5 @@
 import type { DataTableColumn } from "../../DataTable";
-import { formatFieldValue } from "./format";
+import { countLabel, formatFieldValue } from "./format";
 import { rowLabel } from "./relationOptions";
 import type { Schema, SchemaField } from "./schema";
 
@@ -59,9 +59,9 @@ export function createSchemaColumns<T>(
       header: field.label,
       ...(field.help_text ? { hint: field.help_text } : {}),
       sortable: field.type !== "relation",
-      // An opaque read-only id (e.g. `owner_id`) or long text is noise in
-      // a row - still available through the column picker.
-      hidden: (field.format === "uuid" && field.read_only && field.type !== "relation") || Boolean(field.multiline),
+      // An opaque read-only id (e.g. `owner_id`), long text or a list is
+      // noise in a row - still available through the column picker.
+      hidden: (field.format === "uuid" && field.read_only && field.type !== "relation") || Boolean(field.multiline) || field.type === "list",
       render: (row) => {
         const value = (row as Record<string, unknown>)[field.name];
         if (field.type === "relation")
@@ -70,6 +70,9 @@ export function createSchemaColumns<T>(
             field.related_endpoint ? displayFields[field.related_endpoint] : undefined,
             field.related_endpoint && value != null ? bareLabels[`${field.related_endpoint}/${String(value)}`] : undefined,
           );
+        // A list's content (a script's passages, a quiz's questions) is a
+        // page of its own - a row shows how many.
+        if (field.type === "list") return Array.isArray(value) ? countLabel(value.length) : "—";
         return formatFieldValue(field, value);
       },
     }),

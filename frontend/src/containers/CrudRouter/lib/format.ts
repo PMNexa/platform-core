@@ -25,8 +25,33 @@ export function formatFieldValue(field: SchemaField, value: unknown): string {
     const [year, month, day] = value.split("-").map(Number);
     return year && month && day ? DATE_FORMAT.format(new Date(year, month - 1, day)) : value;
   }
+  if (field.type === "list" && Array.isArray(value)) return listValue(field, value);
   if (typeof value === "object") return plainValue(value);
   return String(value);
+}
+
+/** "1 item" / "11 items" - a list field's size, what a list-page cell shows instead of its whole content. */
+export function countLabel(count: number): string {
+  return `${count} ${count === 1 ? "item" : "items"}`;
+}
+
+/** The sub-fields of a list of objects worth showing - an opaque read-only id is noise. */
+export function listItemFields(field: SchemaField): SchemaField[] {
+  if (field.items?.type !== "object") return [];
+  return field.items.fields.filter((sub) => !(sub.format === "uuid" && sub.read_only));
+}
+
+/**
+ * A list field as one short line: plain values joined ("A, B"); objects by
+ * their first plain text sub-field (a citation list -> "S1-C02-001,
+ * S1-C08-002"), or their count when they have none.
+ */
+function listValue(field: SchemaField, value: unknown[]): string {
+  if (value.length === 0) return "—";
+  if (field.items?.type !== "object") return value.map(plainValue).join(", ");
+  const label = listItemFields(field).find((sub) => sub.type === "string" && !sub.choices?.length);
+  if (!label) return countLabel(value.length);
+  return value.map((item) => plainValue((item as Record<string, unknown> | null)?.[label.name])).join(", ");
 }
 
 /** "per_day" -> "Per day". */

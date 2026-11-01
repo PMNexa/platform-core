@@ -42,4 +42,14 @@ describe("createSchemaColumns", () => {
   it("leaves out id and to-many relations", () => {
     expect(createSchemaColumns(SCHEMA).map((column) => column.key)).toEqual(["name", "goal", "org"]);
   });
+
+  it("hides a list column by default and shows its size", () => {
+    const schema: Schema = {
+      fields: [{ name: "segments", type: "list", required: false, read_only: false, label: "Segments", items: { type: "object", fields: [] } }],
+    };
+    const [column] = createSchemaColumns<Record<string, unknown>>(schema);
+    expect(column.hidden).toBe(true);
+    expect(column.render?.({ segments: [{}, {}, {}] })).toBe("3 items");
+    expect(column.render?.({ segments: [{}] })).toBe("1 item");
+  });
 });

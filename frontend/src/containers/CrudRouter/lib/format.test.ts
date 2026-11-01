@@ -35,4 +35,26 @@ describe("formatFieldValue", () => {
     expect(formatFieldValue(field({}), { per: "day", in_period: true, done: 3, note: null })).toBe("Per: day · In period: Yes · Done: 3");
     expect(formatFieldValue(field({}), ["a", "b"])).toBe("a, b");
   });
+
+  it("shows a list as one short line", () => {
+    expect(formatFieldValue(field({ type: "list", items: { type: "string", required: true, read_only: false, label: "item" } }), ["A", "B"])).toBe("A, B");
+    const citations = segments.items?.type === "object" ? segments.items.fields[3] : segments;
+    expect(formatFieldValue(citations, [{ chunk: "S1-C02-001", chunk_id: "u1" }, { chunk: "S1-C08-002", chunk_id: "u2" }])).toBe("S1-C02-001, S1-C08-002");
+    expect(formatFieldValue(citations, [])).toBe("—");
+  });
 });
+
+const segments = field({
+  name: "segments",
+  type: "list",
+  items: {
+    type: "object",
+    fields: [
+      field({ name: "id", read_only: true, format: "uuid" }),
+      field({ name: "kind", choices: [{ value: "hook", label: "Hook" }] }),
+      field({ name: "text", label: "Text" }),
+      field({ name: "citations", type: "list", items: { type: "object", fields: [field({ name: "chunk" }), field({ name: "chunk_id", read_only: true, format: "uuid" })] } }),
+    ],
+  },
+});
+

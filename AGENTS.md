@@ -949,8 +949,13 @@ resource, it's all from the schema.
   `Serializer` child. The generic form leaves list fields out (no control
   for them - `schemaFields.ts`'s `isWritable`); a resource's own widget
   (`registerFieldWidget`) or its MCP tools write them (platform-mcp maps
-  them to a JSON array of objects). The detail page shows one as plain
-  "key: value" text. The viewset reads the value from
+  them to a JSON array of objects). A list page hides its column by
+  default and shows "N items"; the detail page shows it full width as
+  `ListValue` - a compact table, one row per element, one column per
+  sub-field (read-only uuids left out), cells clamped to three lines with
+  the full text on hover - or a bulleted list for plain values. A nested
+  list in a cell is one line (`formatFieldValue`: plain values joined,
+  objects by their first plain text sub-field, e.g. citation chunk keys). The viewset reads the value from
   `validated_data` under the field's `source` and stores it itself.
 - `schema` tags each to-many `DynamicRelationField` backed by a real
   model relation with `kind` (`one_to_many` = reverse FK,

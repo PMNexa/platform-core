@@ -24,6 +24,7 @@ import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
 import CrudRelationSection from "../CrudRelationSection";
+import ListValue from "./ListValue";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 type Row = Record<string, unknown>;
@@ -73,7 +74,8 @@ export interface CrudDetailScreenProps {
  *   the same inside a host's drawer; the relation tabs wait meanwhile;
  * - "Details" tab: every other scalar/to-one field in a responsive grid
  *   (`formatFieldValue`; a choice as a badge; `multiline` text as its own
- *   full-width block). A read-only `format: "uuid"` field that isn't a
+ *   full-width block; a `list` field as a full-width `ListValue` - a
+ *   compact table of its elements, cells clamped). A read-only `format: "uuid"` field that isn't a
  *   relation (an internal id like `owner_id`) is left out. A to-one
  *   relation shows the related row's `display_field` (related schema via
  *   `loadSchema`), linked to its detail page wherever `resourcePath` says
@@ -262,6 +264,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
         </Badge>
       );
     if (field.type === "boolean") return <Badge color={value ? "green" : "secondary"}>{formatFieldValue(field, value)}</Badge>;
+    if (field.type === "list" && Array.isArray(value)) return <ListValue field={field} value={value} />;
     if (field.type === "file")
       return <FileValue name={formatFieldValue(field, value)} download={() => baseApi.file(id, field.name)} />;
     if (field.type !== "relation") return formatFieldValue(field, value);
@@ -386,7 +389,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
             ) : (
               <dl className="row g-3 mb-0">
                 {shownFields.map((field) => (
-                  <div key={field.name} className={field.multiline ? "col-12" : "col-12 col-sm-6 col-lg-4 col-xl-3"}>
+                  <div key={field.name} className={field.multiline || field.type === "list" ? "col-12" : "col-12 col-sm-6 col-lg-4 col-xl-3"}>
                     <dt className="text-secondary fw-normal small mb-1">{field.label}</dt>
                     <dd className="mb-0 text-break" style={field.multiline ? { whiteSpace: "pre-wrap" } : undefined}>
                       {renderValue(field)}
