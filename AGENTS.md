@@ -514,7 +514,24 @@ contains/is, number and date comparisons, choice/relation/boolean
 selects, "is empty" on nullable fields and optional relations; a
 datetime filters by whole local days). Conditions AND together, become
 `core_api.filters`' `?filter{[-]field[.lookup]}=` params, and show as
-removable chips under the header. Not kept in the URL or across visits.
+removable chips under the header.
+
+**Remembered state (`persistKey`)**: with `DataTableConfig.persistKey`,
+`useDataTable` keeps sort, search, filters, page size, page and column
+order/visibility in `localStorage` (`platform-core:<key>`,
+`lib/persist.ts`), so a reload or a detail page and back keeps them.
+Restored AFTER mount, never in the `useState` initializers (the server
+render must match the first client render), and the fetch waits for it -
+the defaults are never fetched first. A stored column order is merged with
+the current columns (gone ones dropped, new ones appended); a remembered
+page past the end goes to the last page; broken/blocked storage = nothing
+remembered. `setFilters` with the same params keeps the page, so a screen
+re-syncing its own filter state doesn't reset it. `CrudListScreen` uses
+`crud-list:<endpoint>` and remembers its filter chips with
+`usePersistedState` (`<key>:conditions`); `CrudRelationSection` uses
+`crud-relation:<endpoint>:<back_filter>` with `persistPage: false` - one
+memory per relation tab, not per parent row. `vitest.setup.ts` clears
+`localStorage` after every test.
 
 **Matches `core_api`'s list-endpoint contract exactly, not a generic
 "call any API" client**: `?page=`/`?page_size=` (`EnvelopePageNumberPagination`),

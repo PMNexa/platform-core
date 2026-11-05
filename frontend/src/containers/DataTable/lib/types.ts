@@ -58,4 +58,13 @@ export interface DataTableConfig<T> {
   defaultSort?: string | null;
   /** Shows the global `?q=` search box. @default true */
   searchable?: boolean;
+  /**
+   * Remember this table's sort, search, filters, page size, page and
+   * column order/visibility in the browser (`localStorage`, see
+   * `lib/persist.ts`) under this key, so they survive a reload or a visit
+   * to a detail page and back. Unset = nothing remembered.
+   */
+  persistKey?: string;
+  /** With `persistKey`: also remember the page. Off for a table whose rows change with context (a relation tab of another parent). @default true */
+  persistPage?: boolean;
 }
