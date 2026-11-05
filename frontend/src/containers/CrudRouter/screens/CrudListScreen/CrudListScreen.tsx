@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, CardFooter, CardHeader, DefaultLink, EmptyState, FormControl, Icon, Pagination, Spinner } from "../../../../components";
 import type { LinkComponent } from "../../../../components";
 import { ColumnPicker, DataTable, useDataTable } from "../../../DataTable";
+import { usePersistedState } from "../../../DataTable/lib/persist";
 import type { DataTableColumn } from "../../../DataTable";
 import { createBaseApi } from "../../lib/baseApi";
 import type { BaseApi, BaseApiRequest } from "../../lib/baseApi";
@@ -181,7 +182,10 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
   const rowKey = (row: T) => (row as { id: string | number }).id;
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
   const [filtering, setFiltering] = useState(false);
-  const [conditions, setConditions] = useState<FilterCondition[]>([]);
+  // Sort, search, page, columns and filters are remembered per resource in
+  // this browser (`useDataTable`'s `persistKey`); the filter chips too.
+  const persistKey = `crud-list:${baseApi.endpoint}`;
+  const [conditions, setConditions, conditionsRestored] = usePersistedState<FilterCondition[]>(`${persistKey}:conditions`, []);
   const fieldsByName = useMemo(() => new Map(schema.fields.map((field) => [field.name, field])), [schema]);
 
   const relationFields = useMemo(() => toOneRelationFields(schema), [schema]);
@@ -260,8 +264,21 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
 
   // Only where `?q=` actually searches something (the schema says so).
   const showSearch = searchable !== false && Boolean(schema.searchable);
-  const table = useDataTable({ endpoint: withRelationIncludes(baseApi.endpoint, schema), columns, rowKey, fetcher: baseApi.list, searchable: showSearch });
+  const table = useDataTable({
+    endpoint: withRelationIncludes(baseApi.endpoint, schema),
+    columns,
+    rowKey,
+    fetcher: baseApi.list,
+    searchable: showSearch,
+    persistKey,
+  });
   useEffect(() => setLabelledRows(table.items), [table.items, setLabelledRows]);
+  // Remembered chips -> the same query params (a no-op when they already
+  // match what the table remembered, so the remembered page stays).
+  const { setFilters } = table;
+  useEffect(() => {
+    if (conditionsRestored) setFilters(filterParams(schema, conditions));
+  }, [conditionsRestored, conditions, schema, setFilters]);
 
   function applyFilters(next: FilterCondition[]) {
     setConditions(next);

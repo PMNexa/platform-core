@@ -248,6 +248,10 @@ function CrudRelationTable({
     fetcher: relatedApi.list,
     defaultPageSize: 10,
     searchable: Boolean(schema.searchable),
+    // Remembered per relation (e.g. every goal's metrics tab), not per
+    // parent row - so not the page, which belongs to one parent's rows.
+    persistKey: `crud-relation:${relatedApi.endpoint}:${backFilter}`,
+    persistPage: false,
   });
   useEffect(() => setLabelledRows(table.items), [table.items, setLabelledRows]);
 

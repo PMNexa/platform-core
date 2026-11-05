@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { readPersisted, writePersisted } from "./persist";
 import { buildDataTableUrl, nextSort } from "./query";
 import type { DataTableColumn, DataTableConfig, DataTableFetcher } from "./types";
 
@@ -62,6 +63,29 @@ export interface DataTableState<T> {
   refetch: () => void;
 }
 
+/** What `persistKey` stores (version 1). */
+interface PersistedTable {
+  v: 1;
+  page: number;
+  pageSize: number;
+  sort: string | null;
+  search: string;
+  filters: [string, string][];
+  columnOrder: string[];
+  hiddenColumns: string[];
+}
+
+function sameFilters(a: [string, string][], b: [string, string][]): boolean {
+  return a.length === b.length && a.every(([key, value], index) => key === b[index][0] && value === b[index][1]);
+}
+
+/** A stored column order, kept to the columns that still exist, new ones appended. */
+function mergeColumnOrder(stored: string[], keys: string[]): string[] {
+  const known = new Set(keys);
+  const kept = stored.filter((key) => known.has(key));
+  return [...kept, ...keys.filter((key) => !kept.includes(key))];
+}
+
 export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
   const {
     endpoint,
@@ -72,6 +96,8 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
     defaultPageSize = DEFAULT_PAGE_SIZE,
     defaultSort = null,
     searchable = true,
+    persistKey,
+    persistPage = true,
   } = config;
 
   const [page, setPageState] = useState(1);
@@ -89,6 +115,54 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [refetchNonce, setRefetchNonce] = useState(0);
+  // With a `persistKey`, the remembered state is applied after mount (not
+  // in the initializers - the server render must match the first client
+  // render) and nothing is fetched until then, so the defaults are never
+  // fetched just to be thrown away.
+  const [restored, setRestored] = useState(!persistKey);
+
+  useEffect(() => {
+    if (!persistKey) return;
+    const stored = readPersisted<PersistedTable>(persistKey);
+    if (stored?.v === 1) {
+      const keys = columns.map((column) => column.key);
+      // Applying remembered state from browser storage - an external system.
+      // oxlint-disable-next-line react/set-state-in-effect
+      if (persistPage) setPageState(Math.max(1, stored.page || 1));
+      // oxlint-disable-next-line react/set-state-in-effect
+      if (pageSizeOptions.includes(stored.pageSize)) setPageSizeState(stored.pageSize);
+      // oxlint-disable-next-line react/set-state-in-effect
+      setSort(stored.sort ?? null);
+      // oxlint-disable-next-line react/set-state-in-effect
+      setSearchState(stored.search ?? "");
+      // oxlint-disable-next-line react/set-state-in-effect
+      setFiltersState(Array.isArray(stored.filters) ? stored.filters : []);
+      // oxlint-disable-next-line react/set-state-in-effect
+      setColumnOrder(mergeColumnOrder(stored.columnOrder ?? [], keys));
+      // oxlint-disable-next-line react/set-state-in-effect
+      setHiddenColumns(new Set((stored.hiddenColumns ?? []).filter((key) => keys.includes(key))));
+    }
+    // oxlint-disable-next-line react/set-state-in-effect
+    setRestored(true);
+    // Once per key: options and `columns` are only read here, a change to
+    // them must not re-apply the remembered state over the user's edits.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey]);
+
+  useEffect(() => {
+    if (!persistKey || !restored) return;
+    const state: PersistedTable = {
+      v: 1,
+      page,
+      pageSize,
+      sort,
+      search,
+      filters,
+      columnOrder,
+      hiddenColumns: [...hiddenColumns],
+    };
+    writePersisted(persistKey, state);
+  }, [persistKey, restored, page, pageSize, sort, search, filters, columnOrder, hiddenColumns]);
 
   const url = useMemo(
     () => buildDataTableUrl(endpoint, { page, pageSize, sort, search, filters }),
@@ -96,6 +170,7 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
   );
 
   useEffect(() => {
+    if (!restored) return;
     let cancelled = false;
     // Synchronizing with an external system (the network), not deriving
     // state from props/state - exactly the case React's own docs carve
@@ -111,6 +186,12 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
     fetcher(url)
       .then((result) => {
         if (cancelled) return;
+        // A remembered page past the end (rows were deleted since): go to the last one.
+        const lastPage = Math.max(1, Math.ceil(result.total / pageSize));
+        if (result.items.length === 0 && page > lastPage) {
+          setPageState(lastPage);
+          return;
+        }
         setItems(result.items);
         setTotal(result.total);
       })
@@ -124,7 +205,7 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
     return () => {
       cancelled = true;
     };
-  }, [url, fetcher, refetchNonce]);
+  }, [url, fetcher, refetchNonce, restored, page, pageSize]);
 
   const refetch = useCallback(() => setRefetchNonce((n) => n + 1), []);
 
@@ -154,9 +235,13 @@ export function useDataTable<T>(config: DataTableConfig<T>): DataTableState<T> {
     setPageState(1);
   }, []);
 
+  // The same filters again (a screen re-syncing its own filter state) keep the page.
   const setFilters = useCallback((next: [string, string][]) => {
-    setFiltersState(next);
-    setPageState(1);
+    setFiltersState((prev) => {
+      if (sameFilters(prev, next)) return prev;
+      setPageState(1);
+      return next;
+    });
   }, []);
 
   const toggleColumn = useCallback((columnKey: string) => {
