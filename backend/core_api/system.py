@@ -284,6 +284,12 @@ team_removed = Signal()
 #: e.g. goalnexa recomputes the totals that follow the team tree.
 team_changed = Signal()
 
+#: Sent when a placeholder person (platform-org: someone in a team with no
+#: account yet) becomes a real account: `placeholder_id`, `user_id`,
+#: `org_id`. Modules move what they keep under the placeholder's bare id
+#: (e.g. goalnexa's member copies) to the user.
+person_converted = Signal()
+
 
 # --- operations: scheduler heartbeats, delivery log, usage ----------------
 
