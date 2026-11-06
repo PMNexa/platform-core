@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, CardBody, CardHeader, CardTitle } from "../components";
 import { systemApi, type InsightBlock, type InsightCell, type Insights } from "./api";
+import { formatDate, formatNumber, useLocale, useT, type Locale } from "../i18n";
+import messages from "./messages";
 
 export interface SystemInsightsScreenProps {
   accessToken: string;
@@ -8,8 +10,12 @@ export interface SystemInsightsScreenProps {
 
 const RANGES = [7, 30, 90] as const;
 const RANGE_KEY = "platform-system:insights-days";
-const NUMBER = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
-const DAY = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+const NUMBER: Intl.NumberFormatOptions = { maximumFractionDigits: 1 };
+const DAY: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+
+function formatDay(day: string, locale: Locale): string {
+  return formatDate(`${day}T00:00:00`, DAY, locale);
+}
 
 const INSIGHTS_CSS = `
 .ps-insights .ps-tile { min-height: 100%; }
@@ -37,8 +43,8 @@ function readDays(): number {
   }
 }
 
-function formatValue(value: number, unit: string): string {
-  return `${NUMBER.format(value)}${unit}`;
+function formatValue(value: number, unit: string, locale: Locale): string {
+  return `${formatNumber(value, NUMBER, locale)}${unit}`;
 }
 
 /**
@@ -47,6 +53,8 @@ function formatValue(value: number, unit: string): string {
  * sparkline of the range - each day hoverable for its exact value.
  */
 function SeriesTile({ series, start }: { series: Insights["series"][number]; start: string }) {
+  const t = useT(messages);
+  const locale = useLocale();
   const current = series.points.filter(([d]) => d >= start);
   const previous = series.points.filter(([d]) => d < start);
   const sum = (points: [string, number][]) => points.reduce((total, [, v]) => total + v, 0);
@@ -56,10 +64,10 @@ function SeriesTile({ series, start }: { series: Insights["series"][number]; sta
   const change = before === null ? null : value - before;
   const changeText =
     change === null
-      ? "No earlier data"
+      ? t("noEarlierData")
       : change === 0
-        ? "No change"
-        : `${change > 0 ? "▲" : "▼"} ${formatValue(Math.abs(change), series.unit)}${before ? ` (${Math.round((100 * Math.abs(change)) / Math.abs(before))}%)` : ""}`;
+        ? t("noChange")
+        : `${change > 0 ? "▲" : "▼"} ${formatValue(Math.abs(change), series.unit, locale)}${before ? ` (${Math.round((100 * Math.abs(change)) / Math.abs(before))}%)` : ""}`;
 
   const width = 240;
   const height = 36;
@@ -75,18 +83,18 @@ function SeriesTile({ series, start }: { series: Insights["series"][number]; sta
     <div className="col-6 col-md-4 col-xl-3">
       <div className="ps-tile" title={series.help || undefined}>
         <div className="text-secondary small text-truncate">{series.label}</div>
-        <div className="ps-tile-value">{formatValue(value, series.unit)}</div>
+        <div className="ps-tile-value">{formatValue(value, series.unit, locale)}</div>
         <div className="text-secondary small">
           {changeText}
-          {change !== null && <span className="visually-hidden"> compared with the previous period</span>}
+          {change !== null && <span className="visually-hidden">{t("comparedWithPrevious")}</span>}
         </div>
         {current.length > 1 && (
-          <svg className="ps-spark" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${series.label} per day`}>
+          <svg className="ps-spark" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={t("perDay", { label: series.label })}>
             <path className="ps-spark-area" d={`${line}L${width},${height}L0,${height}Z`} />
             <path className="ps-spark-line" d={line} vectorEffect="non-scaling-stroke" />
             {current.map(([d, v], i) => (
               <rect key={d} className="ps-hit" x={Math.max(0, i * step - step / 2)} y={0} width={step || width} height={height}>
-                <title>{`${DAY.format(new Date(`${d}T00:00:00`))}: ${formatValue(v, series.unit)}`}</title>
+                <title>{`${formatDay(d, locale)}: ${formatValue(v, series.unit, locale)}`}</title>
               </rect>
             ))}
           </svg>
@@ -126,6 +134,8 @@ function Cell({ cell, align }: { cell: InsightCell; align?: "end" }) {
 }
 
 function Block({ block }: { block: InsightBlock }) {
+  const t = useT(messages);
+  const locale = useLocale();
   if (block.kind === "tiles")
     return (
       <div className="mb-3">
@@ -134,7 +144,7 @@ function Block({ block }: { block: InsightBlock }) {
           {block.items.map((item) => (
             <div key={item.label} className="col-6 col-md-4 col-xl-3" title={item.hint}>
               <div className="text-secondary small">{item.label}</div>
-              <div className="ps-tile-value">{typeof item.value === "number" ? NUMBER.format(item.value) : item.value}</div>
+              <div className="ps-tile-value">{typeof item.value === "number" ? formatNumber(item.value, NUMBER, locale) : item.value}</div>
               {item.hint && <div className="text-secondary small">{item.hint}</div>}
             </div>
           ))}
@@ -145,7 +155,7 @@ function Block({ block }: { block: InsightBlock }) {
     <div className="mb-3">
       {block.title && <div className="fw-semibold mb-2">{block.title}</div>}
       {block.rows.length === 0 ? (
-        <div className="text-secondary small">{block.empty ?? "Nothing yet."}</div>
+        <div className="text-secondary small">{block.empty ?? t("nothingYet")}</div>
       ) : (
         <div className="table-responsive">
           <table className="table table-sm table-vcenter card-table mb-0">
@@ -187,6 +197,8 @@ function SystemInsightsScreen({ accessToken }: SystemInsightsScreenProps) {
   const [days, setDays] = useState(readDays);
   const [data, setData] = useState<Insights | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useT(messages);
+  const locale = useLocale();
 
   useEffect(() => {
     let cancelled = false;
@@ -235,7 +247,7 @@ function SystemInsightsScreen({ accessToken }: SystemInsightsScreenProps) {
         {INSIGHTS_CSS}
       </style>
       <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <div className="btn-group" role="group" aria-label="Range">
+        <div className="btn-group" role="group" aria-label={t("range")}>
           {RANGES.map((option) => (
             <button
               key={option}
@@ -244,23 +256,22 @@ function SystemInsightsScreen({ accessToken }: SystemInsightsScreenProps) {
               aria-pressed={option === days}
               onClick={() => pick(option)}
             >
-              {option} days
+              {t("nDays", { n: option })}
             </button>
           ))}
         </div>
         {data && (
           <span className="text-secondary small">
-            {DAY.format(new Date(`${data.start}T00:00:00`))} – {DAY.format(new Date(`${data.end}T00:00:00`))}, compared with the{" "}
-            {days} days before
+            {t("rangeSpan", { start: formatDay(data.start, locale), end: formatDay(data.end, locale), n: days })}
           </span>
         )}
         <Button variant="secondary" outline size="sm" className="ms-auto" onClick={() => void downloadCsv()}>
-          Export CSV
+          {t("exportCsv")}
         </Button>
       </div>
       {error && <Alert variant="danger">{error}</Alert>}
       {!data ? (
-        !error && <div className="text-secondary">Loading…</div>
+        !error && <div className="text-secondary">{t("loading")}</div>
       ) : (
         <div className="row g-3">
           {groups.map(([group, series]) => (

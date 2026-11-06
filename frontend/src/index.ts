@@ -6,6 +6,8 @@
  */
 export * from "./components";
 export * from "./containers";
+// Translations (English + Vietnamese): every module's strings go through these.
+export * from "./i18n";
 // For a host's own route module that renders a CRUD screen outside the
 // generic route files (e.g. a detail screen in a drawer) and wants its
 // relation links to land where the host mounted each resource.

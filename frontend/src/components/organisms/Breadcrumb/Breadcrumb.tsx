@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { DefaultLink, type LinkComponent } from "../../types";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export type BreadcrumbSeparator = "dots" | "arrows" | "bullets";
 
@@ -28,7 +30,7 @@ export interface BreadcrumbProps {
 
 /**
  * Tabler's `.breadcrumb` (docs.tabler.io/ui/components/breadcrumb) -
- * `<nav aria-label="Breadcrumb">` wrapping an `<ol>`, same accessibility
+ * `<nav aria-label={t("breadcrumb")}>` wrapping an `<ol>`, same accessibility
  * shape Tabler's own docs call out: the label is what tells this nav
  * apart from others on the page, and the current (last) item is a plain
  * `<li aria-current="page">`, never a link. Zero react-router dependency
@@ -37,12 +39,13 @@ export interface BreadcrumbProps {
  * its own router's `Link`.
  */
 function Breadcrumb({ items, linkComponent: Link = DefaultLink, separator, muted, className }: BreadcrumbProps) {
+  const t = useT(messages);
   const classes = ["breadcrumb", separator && `breadcrumb-${separator}`, muted && "breadcrumb-muted", className]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label={t("breadcrumb")}>
       <ol className={classes}>
         {items.map((item, index) => {
           const isLastItem = index === items.length - 1;

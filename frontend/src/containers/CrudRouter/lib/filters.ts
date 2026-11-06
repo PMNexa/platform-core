@@ -1,3 +1,5 @@
+import { translator, type Locale } from "../../../i18n";
+import messages from "../messages";
 import type { Schema, SchemaField } from "./schema";
 
 /**
@@ -24,23 +26,21 @@ export interface FilterOperatorOption {
   label: string;
 }
 
-const EMPTY_OPS: FilterOperatorOption[] = [
-  { op: "empty", label: "is empty" },
-  { op: "not_empty", label: "is not empty" },
-];
 
 /** Fields a list can filter on: everything but the id and to-many relations (not one value per row). */
 export function filterableFields(schema: Schema): SchemaField[] {
   return schema.fields.filter((field) => field.name !== "id" && !(field.type === "relation" && field.many));
 }
 
-export function operatorsFor(field: SchemaField): FilterOperatorOption[] {
+/** The operators `field` offers, labelled in `locale` (default: the current UI language). */
+export function operatorsFor(field: SchemaField, locale?: Locale): FilterOperatorOption[] {
+  const t = translator(messages, locale);
   let ops: FilterOperatorOption[];
-  if (field.type === "boolean") ops = [{ op: "is", label: "is" }];
+  if (field.type === "boolean") ops = [{ op: "is", label: t("opIs") }];
   else if (field.choices || field.type === "relation" || field.format === "uuid")
     ops = [
-      { op: "is", label: "is" },
-      { op: "is_not", label: "is not" },
+      { op: "is", label: t("opIs") },
+      { op: "is_not", label: t("opIsNot") },
     ];
   else if (field.type === "integer" || field.type === "number")
     ops = [
@@ -53,21 +53,25 @@ export function operatorsFor(field: SchemaField): FilterOperatorOption[] {
     ];
   else if (field.type === "date" || field.type === "datetime")
     ops = [
-      { op: "is", label: "is on" },
-      { op: "lt", label: "is before" },
-      { op: "gt", label: "is after" },
-      { op: "lte", label: "is on or before" },
-      { op: "gte", label: "is on or after" },
+      { op: "is", label: t("opIsOn") },
+      { op: "lt", label: t("opIsBefore") },
+      { op: "gt", label: t("opIsAfter") },
+      { op: "lte", label: t("opIsOnOrBefore") },
+      { op: "gte", label: t("opIsOnOrAfter") },
     ];
   else
     ops = [
-      { op: "contains", label: "contains" },
-      { op: "is", label: "is" },
-      { op: "is_not", label: "is not" },
+      { op: "contains", label: t("opContains") },
+      { op: "is", label: t("opIs") },
+      { op: "is_not", label: t("opIsNot") },
     ];
   // A to-one relation that isn't required can be unset - same as a nullable field.
   const canBeEmpty = field.nullable || (field.type === "relation" && !field.required);
-  return canBeEmpty && field.type !== "boolean" ? [...ops, ...EMPTY_OPS] : ops;
+  const emptyOps: FilterOperatorOption[] = [
+    { op: "empty", label: t("opEmpty") },
+    { op: "not_empty", label: t("opNotEmpty") },
+  ];
+  return canBeEmpty && field.type !== "boolean" ? [...ops, ...emptyOps] : ops;
 }
 
 export function needsValue(op: FilterOperator): boolean {
@@ -140,11 +144,12 @@ export function isComplete(condition: FilterCondition): boolean {
 }
 
 /** A one-line summary for an active-filter chip, e.g. `Status is Done`. */
-export function describeCondition(field: SchemaField, condition: FilterCondition): string {
-  const opLabel = operatorsFor(field).find((option) => option.op === condition.op)?.label ?? condition.op;
-  if (!needsValue(condition.op)) return `${field.label} ${opLabel}`;
+export function describeCondition(field: SchemaField, condition: FilterCondition, locale?: Locale): string {
+  const t = translator(messages, locale);
+  const op = operatorsFor(field, locale).find((option) => option.op === condition.op)?.label ?? condition.op;
+  if (!needsValue(condition.op)) return t("conditionNoValue", { field: field.label, op });
   let value = condition.valueLabel ?? condition.value;
-  if (field.type === "boolean") value = condition.value === "true" ? "yes" : "no";
+  if (field.type === "boolean") value = condition.value === "true" ? t("yesLower") : t("noLower");
   else if (field.choices) value = field.choices.find((choice) => choice.value === condition.value)?.label ?? value;
-  return `${field.label} ${opLabel} ${value}`;
+  return t("conditionWithValue", { field: field.label, op, value });
 }

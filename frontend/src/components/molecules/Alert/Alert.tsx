@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export type AlertVariant = "danger" | "success" | "warning" | "info" | "primary" | "secondary";
 
@@ -24,12 +26,13 @@ export interface AlertProps {
  * notification (nothing here auto-hides).
  */
 function Alert({ variant, children, title, onDismiss, role, className }: AlertProps) {
+  const t = useT(messages);
   const classes = ["alert", `alert-${variant}`, onDismiss && "alert-dismissible", className].filter(Boolean).join(" ");
   return (
     <div className={classes} role={role ?? (variant === "danger" ? "alert" : "status")}>
       {title && <h4 className="alert-title">{title}</h4>}
       {title ? <div className="text-secondary">{children}</div> : children}
-      {onDismiss && <button type="button" className="btn-close" aria-label="Dismiss" onClick={onDismiss} />}
+      {onDismiss && <button type="button" className="btn-close" aria-label={t("dismiss")} onClick={onDismiss} />}
     </div>
   );
 }

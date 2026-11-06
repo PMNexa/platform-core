@@ -1,5 +1,7 @@
 import type { NavEntry, NavItem } from "../components/types";
 import SystemIcon from "./SystemIcon";
+import { translate } from "../i18n";
+import messages from "./messages";
 import { createCrudRoutes, prefixRoutes, routeFilePath, type RouteEntry } from "../containers/CrudRouter/lib/routes";
 
 /**
@@ -48,25 +50,25 @@ export function createSystemRoutes(basePath: string): RouteEntry[] {
 /**
  * The "System" sidebar group - pass the SAME `basePath` as
  * `createSystemRoutes`; `extra` adds other modules' admin pages (e.g.
- * platform-org's "All organizations") after Settings. Each link carries its permission, so the group
+ * platform-org's "All organizations") after Settings. Labels are in the current language (called during render). Each link carries its permission, so the group
  * only shows for admins (run it through the host's permission filter).
  */
 export function createSystemNavItems(basePath: string, extra: NavItem[] = []): NavEntry[] {
   const base = `/${basePath.replace(/^\/+|\/+$/g, "")}`;
   return [
     {
-      label: "System",
+      label: translate(messages, "navSystem"),
       icon: <SystemIcon />,
       children: [
-        { label: "Status", to: `${base}/status`, permission: "system-settings.view" },
-        { label: "Insights", to: `${base}/insights`, permission: "system-settings.view" },
-        { label: "Settings", to: `${base}/settings`, permission: "system-settings.view" },
+        { label: translate(messages, "navStatus"), to: `${base}/status`, permission: "system-settings.view" },
+        { label: translate(messages, "navInsights"), to: `${base}/insights`, permission: "system-settings.view" },
+        { label: translate(messages, "navSettings"), to: `${base}/settings`, permission: "system-settings.view" },
         ...extra,
-        { label: "Audit log", to: `${base}/audit-events`, permission: "audit-events.view" },
-        { label: "Email log", to: `${base}/outgoing-emails`, permission: "outgoing-emails.view" },
-        { label: "Notification log", to: `${base}/delivery-attempts`, permission: "delivery-attempts.view" },
-        { label: "Lifecycle email", to: `${base}/lifecycle`, permission: "lifecycle-emails.view" },
-        { label: "Suppressed addresses", to: `${base}/email-suppressions`, permission: "email-suppressions.view" },
+        { label: translate(messages, "navAuditLog"), to: `${base}/audit-events`, permission: "audit-events.view" },
+        { label: translate(messages, "navEmailLog"), to: `${base}/outgoing-emails`, permission: "outgoing-emails.view" },
+        { label: translate(messages, "navNotificationLog"), to: `${base}/delivery-attempts`, permission: "delivery-attempts.view" },
+        { label: translate(messages, "navLifecycle"), to: `${base}/lifecycle`, permission: "lifecycle-emails.view" },
+        { label: translate(messages, "navSuppressed"), to: `${base}/email-suppressions`, permission: "email-suppressions.view" },
       ],
     },
   ];

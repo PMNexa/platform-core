@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, CardBody, CardHeader, CardTitle, FormControl } from "../components";
 import { systemApi, type InfoGroup, type SystemSetting } from "./api";
+import { useT } from "../i18n";
+import messages from "./messages";
 
 export interface SystemSettingsScreenProps {
   accessToken: string;
@@ -24,14 +26,15 @@ function sameValue(a: unknown, b: unknown): boolean {
 }
 
 function SourceBadge({ setting }: { setting: SystemSetting }) {
+  const t = useT(messages);
   if (setting.source === "env")
     return (
-      <Badge color="azure" title="Change it where the app is deployed - it can't be changed here.">
-        Set by {setting.env}
+      <Badge color="azure" title={t("envLockedHint")}>
+        {t("setBy", { env: setting.env })}
       </Badge>
     );
-  if (setting.source === "saved") return <Badge color="green">Saved</Badge>;
-  return <Badge>Default</Badge>;
+  if (setting.source === "saved") return <Badge color="green">{t("sourceSaved")}</Badge>;
+  return <Badge>{t("sourceDefault")}</Badge>;
 }
 
 function SettingRow({
@@ -48,6 +51,7 @@ function SettingRow({
   const [error, setError] = useState<string | null>(null);
   const dirty = !sameValue(fromDraft(setting, draft), setting.value);
   const id = `setting-${setting.key}`;
+  const t = useT(messages);
 
   async function run(action: () => Promise<SystemSetting>) {
     setBusy(true);
@@ -76,7 +80,7 @@ function SettingRow({
           disabled={disabled}
           onChange={(event) => setDraft(event.target.checked)}
         />
-        <span className="form-check-label">{draft ? "On" : "Off"}</span>
+        <span className="form-check-label">{draft ? t("on") : t("off")}</span>
       </label>
     );
   } else if (setting.type === "choice") {
@@ -97,7 +101,7 @@ function SettingRow({
         rows={3}
         value={String(draft)}
         disabled={disabled}
-        placeholder={setting.type === "list" ? "One per line" : ""}
+        placeholder={setting.type === "list" ? t("onePerLine") : ""}
         onChange={(event) => setDraft(event.target.value)}
       />
     );
@@ -130,12 +134,12 @@ function SettingRow({
               disabled={busy || !dirty}
               onClick={() => void run(() => api.save(setting.key, fromDraft(setting, draft)))}
             >
-              Save
+              {t("save")}
             </Button>
           )}
           {setting.editable && setting.source === "saved" && (
             <Button variant="secondary" outline disabled={busy} onClick={() => void run(() => api.reset(setting.key))}>
-              Reset to default
+              {t("resetToDefault")}
             </Button>
           )}
         </div>
@@ -167,6 +171,7 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
   const [testTo, setTestTo] = useState("");
   const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const t = useT(messages);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,8 +201,8 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
       const result = await api.testEmail(testTo.trim());
       setTestResult(
         result.status === "sent"
-          ? { ok: true, text: `Sent to ${result.to}.` }
-          : { ok: false, text: `Not sent: ${result.error || result.status}` },
+          ? { ok: true, text: t("sentTo", { to: result.to }) }
+          : { ok: false, text: t("notSent", { reason: result.error || result.status }) },
       );
     } catch (thrown) {
       setTestResult({ ok: false, text: thrown instanceof Error ? thrown.message : String(thrown) });
@@ -221,7 +226,7 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
   }
 
   if (error && settings === null) return <Alert variant="danger">{error}</Alert>;
-  if (settings === null) return <div className="text-secondary">Loading…</div>;
+  if (settings === null) return <div className="text-secondary">{t("loading")}</div>;
 
   return (
     <div className="row g-3">
@@ -247,19 +252,19 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
       <div className="col-12 col-xl-5 d-flex flex-column gap-3">
         <Card>
           <CardHeader>
-            <CardTitle>Test email</CardTitle>
+            <CardTitle>{t("testEmail")}</CardTitle>
           </CardHeader>
           <CardBody>
             <div className="d-flex gap-2">
               <FormControl
                 type="email"
-                placeholder="Your own address"
-                aria-label="Send a test email to"
+                placeholder={t("yourOwnAddress")}
+                aria-label={t("sendTestTo")}
                 value={testTo}
                 onChange={(event) => setTestTo(event.target.value)}
               />
               <Button variant="primary" disabled={busy} onClick={() => void sendTest()}>
-                Send
+                {t("send")}
               </Button>
             </div>
             {testResult && (
@@ -273,7 +278,7 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
           <Card key={group.group}>
             <CardHeader>
               <CardTitle>{group.group}</CardTitle>
-              <span className="card-subtitle ms-auto text-secondary small">Read-only</span>
+              <span className="card-subtitle ms-auto text-secondary small">{t("readOnly")}</span>
             </CardHeader>
             <div className="table-responsive">
               <table className="table table-vcenter card-table">
@@ -294,9 +299,9 @@ function SystemSettingsScreen({ accessToken }: SystemSettingsScreenProps) {
         ))}
         <Card>
           <CardBody className="d-flex align-items-center justify-content-between">
-            <span className="text-secondary">Every security event, as a spreadsheet.</span>
+            <span className="text-secondary">{t("auditHint")}</span>
             <Button variant="secondary" outline onClick={() => void downloadAudit()}>
-              Export audit log (CSV)
+              {t("exportAudit")}
             </Button>
           </CardBody>
         </Card>

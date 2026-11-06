@@ -1,3 +1,6 @@
+import { useT } from "../../../i18n";
+import messages from "../../messages";
+
 export interface PaginationProps {
   /** 1-indexed, same convention as `?page=`. */
   page: number;
@@ -20,6 +23,7 @@ export interface PaginationProps {
  * CALLER's state, same "props in, no owned state" rule as `Table`.
  */
 function Pagination({ page, pageCount, onPageChange, pageSize, pageSizeOptions, onPageSizeChange, className }: PaginationProps) {
+  const t = useT(messages);
   const classes = ["d-flex align-items-center gap-3", className].filter(Boolean).join(" ");
   const showPageSize = pageSize != null && pageSizeOptions != null && onPageSizeChange != null;
 
@@ -29,28 +33,28 @@ function Pagination({ page, pageCount, onPageChange, pageSize, pageSizeOptions, 
         <select
           className="form-select form-select-sm"
           style={{ width: "auto" }}
-          aria-label="Page size"
+          aria-label={t("pageSize")}
           value={pageSize}
           onChange={(event) => onPageSizeChange(Number(event.target.value))}
         >
           {pageSizeOptions.map((size) => (
             <option key={size} value={size}>
-              {size} / page
+              {t("perPage", { size })}
             </option>
           ))}
         </select>
       )}
 
-      <nav aria-label="Pagination" className="ms-auto">
+      <nav aria-label={t("pagination")} className="ms-auto">
         <ul className="pagination pagination-sm m-0">
           <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
             <button type="button" className="page-link" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-              Prev
+              {t("prev")}
             </button>
           </li>
           <li className="page-item disabled">
             <span className="page-link">
-              Page {page} of {pageCount}
+              {t("pageOf", { page, count: pageCount })}
             </span>
           </li>
           <li className={`page-item ${page >= pageCount ? "disabled" : ""}`}>
@@ -60,7 +64,7 @@ function Pagination({ page, pageCount, onPageChange, pageSize, pageSizeOptions, 
               disabled={page >= pageCount}
               onClick={() => onPageChange(page + 1)}
             >
-              Next
+              {t("next")}
             </button>
           </li>
         </ul>

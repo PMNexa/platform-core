@@ -1,5 +1,7 @@
 import type { EmailCategoryChoice } from "./api";
 import { Badge } from "../components";
+import { useT } from "../i18n";
+import messages from "./messages";
 
 export interface EmailCategoryListProps {
   categories: EmailCategoryChoice[];
@@ -11,13 +13,14 @@ export interface EmailCategoryListProps {
 
 /** One switch per email category, with what it covers. */
 function EmailCategoryList({ categories, onToggle, disabled, highlight }: EmailCategoryListProps) {
+  const t = useT(messages);
   return (
     <div className="divide-y">
       {categories.map((category) => (
         <label key={category.key} className="row g-2 align-items-start py-2 m-0" style={{ cursor: "pointer" }}>
           <span className="col">
             <span className="fw-medium">{category.label}</span>
-            {highlight === category.key && <Badge color="azure" className="ms-2">This email</Badge>}
+            {highlight === category.key && <Badge color="azure" className="ms-2">{t("thisEmail")}</Badge>}
             {category.help && <span className="d-block small text-secondary">{category.help}</span>}
           </span>
           <span className="col-auto">

@@ -21,12 +21,14 @@ import io
 
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.translation import gettext
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from core_api.i18n import tr, tr_texts
 from core_api.system import (
     audit,
     default_value,
@@ -60,11 +62,12 @@ def _describe(definition) -> dict:
     found, saved = store.stored_value(definition.key) if definition.editable else (False, None)
     return {
         "key": definition.key,
-        "label": definition.label,
+        # Written in English where registered; in the request's language here.
+        "label": tr(definition.label),
         "type": definition.type,
-        "group": definition.group,
-        "help": definition.help,
-        "choices": [{"value": v, "label": label} for v, label in (definition.choices or [])],
+        "group": tr(definition.group),
+        "help": tr(definition.help),
+        "choices": [{"value": v, "label": tr(label)} for v, label in (definition.choices or [])],
         "value": get_setting(definition.key),
         "default": default_value(definition),
         "source": "env" if locked else "saved" if found else "default",
@@ -84,7 +87,7 @@ class SystemSettingViewSet(BaseViewSet):
 
     def list(self, request, *args, **kwargs):
         definitions = sorted(setting_definitions(), key=lambda d: (d.group, d.label))
-        return Response({"settings": [_describe(d) for d in definitions], "info": system_info()})
+        return Response({"settings": [_describe(d) for d in definitions], "info": tr_texts(system_info())})
 
     def _definition(self, key):
         try:
@@ -110,7 +113,7 @@ class SystemSettingViewSet(BaseViewSet):
     def destroy(self, request, key=None):
         definition = self._definition(key)
         if env_value(definition)[0] or not definition.editable:
-            raise PermissionDenied(f"{definition.label} can't be changed here.")
+            raise PermissionDenied(gettext("{setting} can't be changed here.").format(setting=tr(definition.label)))
         before = get_setting(key)
         store.reset(key)
         audit("settings.reset", request=request, target_type="setting", target_id=key,

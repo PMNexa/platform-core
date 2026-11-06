@@ -28,7 +28,9 @@ from django.conf import settings
 from django.db import IntegrityError, connection, transaction
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
+from django.utils.translation import gettext
 
+from core_api.i18n import tr, tr_texts
 from core_api.system import (
     AGENT,
     InsightSection,
@@ -296,7 +298,7 @@ def insights(days: int) -> dict:
         stats.setdefault(row.key, []).append([row.date.isoformat(), row.value])
     series = [
         {
-            "key": s.key, "label": s.label, "group": s.group, "help": s.help, "kind": s.kind, "unit": s.unit,
+            "key": s.key, "label": tr(s.label), "group": tr(s.group), "help": tr(s.help), "kind": s.kind, "unit": s.unit,
             "points": stats.get(s.key, []),
         }
         for s in insight_series()
@@ -308,7 +310,8 @@ def insights(days: int) -> dict:
         except Exception:
             logger.exception("Insight section %s failed", section.key)
             blocks = [{"kind": "tiles", "items": [{"label": "Error", "value": "couldn't compute"}]}]
-        sections.append({"key": section.key, "title": section.title, "description": section.description, "blocks": blocks})
+        sections.append({"key": section.key, "title": tr(section.title), "description": tr(section.description),
+                         "blocks": tr_texts(blocks)})
     return {
         "days": days, "start": start.isoformat(), "end": end.isoformat(), "previous_start": since.isoformat(),
         "series": series, "sections": sections,
@@ -377,7 +380,7 @@ def _active_users_section(days: int) -> list[dict]:
             {"label": "Active, last 30 days", "value": mau},
             {"label": "Stickiness", "value": _pct(dau, mau), "hint": "Active today / active in 30 days"},
         ]},
-        {"kind": "tiles", "title": f"By channel, last {days} days", "items": [
+        {"kind": "tiles", "title": gettext("By channel, last {days} days").format(days=days), "items": [
             {"label": "Website only", "value": web_only},
             {"label": "AI assistant only", "value": agent_only},
             {"label": "Both", "value": both},
@@ -442,7 +445,7 @@ def _quality_section(days: int) -> list[dict]:
     return [
         {"kind": "tiles", "items": [
             {"label": "API requests", "value": requests},
-            {"label": "Server errors", "value": _pct(errors, requests), "hint": f"{errors} requests answered 5xx"},
+            {"label": "Server errors", "value": _pct(errors, requests), "hint": gettext("{count} requests answered 5xx").format(count=errors)},
             {"label": "Median response", "value": format_ms(percentile(overall, 0.5))},
             {"label": "95th percentile", "value": format_ms(percentile(overall, 0.95))},
             {"label": "MCP tool calls", "value": mcp_calls},

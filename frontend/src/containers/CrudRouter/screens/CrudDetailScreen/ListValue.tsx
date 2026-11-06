@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../../../../components/organisms/Table";
 import { formatFieldValue, listItemFields } from "../../lib/format";
 import type { SchemaField } from "../../lib/schema";
+import { useLocale } from "../../../../i18n";
 
 /** Lines a cell of a nested row may take before it's cut (full text on hover). */
 const CELL_LINES = 3;
@@ -14,6 +15,7 @@ const CELL_LINES = 3;
  * A list of plain values is a bulleted list.
  */
 export function ListValue({ field, value }: { field: SchemaField; value: unknown[] }) {
+  const locale = useLocale();
   if (value.length === 0) return <span className="text-secondary">—</span>;
 
   const columns = listItemFields(field);
@@ -21,7 +23,7 @@ export function ListValue({ field, value }: { field: SchemaField; value: unknown
     return (
       <ul className="mb-0 ps-3">
         {value.map((item, index) => (
-          <li key={index}>{formatFieldValue({ ...field, type: "string", items: undefined }, item)}</li>
+          <li key={index}>{formatFieldValue({ ...field, type: "string", items: undefined }, item, locale)}</li>
         ))}
       </ul>
     );
@@ -41,7 +43,7 @@ export function ListValue({ field, value }: { field: SchemaField; value: unknown
           return (
             <TableRow key={typeof row.id === "string" ? row.id : index}>
               {columns.map((column) => {
-                const text = formatFieldValue(column, row[column.name]);
+                const text = formatFieldValue(column, row[column.name], locale);
                 return (
                   <TableCell key={column.name} clamp={CELL_LINES} title={text.length > 40 ? text : undefined}>
                     {text}

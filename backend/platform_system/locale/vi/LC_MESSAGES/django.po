@@ -1,0 +1,767 @@
+# platform_system: the API's user-visible texts. Written by `manage.py collect_ui_strings`;
+# fill in msgstr, then `msgfmt -o django.mo django.po`.
+msgid ""
+msgstr ""
+"Project-Id-Version: platform_system\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: platform-core/backend/core_api/system.py:460
+msgid "0 (keep forever) or more days."
+msgstr "0 (giữ mãi mãi) hoặc nhiều ngày hơn."
+
+#: setting retention.audit_days
+#: setting retention.notifications_days
+msgid "0 = keep forever. Older rows are deleted once a day."
+msgstr "0 = giữ mãi mãi. Dữ liệu cũ hơn được xóa mỗi ngày một lần."
+
+#: platform-core/backend/platform_system/insights.py:459
+#: platform-core/backend/platform_system/insights.py:471
+msgid "95th pct"
+msgstr "P95"
+
+#: platform-core/backend/platform_system/insights.py:450
+msgid "95th percentile"
+msgstr "Phân vị 95"
+
+#: platform-core/backend/core_api/viewsets.py:467
+msgid "A non-empty list of ids is required."
+msgstr "Cần một danh sách ID không rỗng."
+
+#: schema platform_system.AuditEvent.action
+msgid "Action"
+msgstr "Hành động"
+
+#: insight section active_users
+msgid "Active = signed in, refreshed a session, used an AI assistant or checked in."
+msgstr "Hoạt động = đã đăng nhập, làm mới phiên, dùng Trợ lý AI hoặc check-in."
+
+#: platform-core/backend/platform_system/insights.py:378
+msgid "Active today"
+msgstr "Hoạt động hôm nay"
+
+#: platform-core/backend/platform_system/insights.py:381
+msgid "Active today / active in 30 days"
+msgstr "Hoạt động hôm nay / hoạt động trong 30 ngày"
+
+#: insight stickiness
+msgid "Active today / active in the last 30 days."
+msgstr "Hoạt động hôm nay / hoạt động trong 30 ngày qua."
+
+#: insight section active_users
+msgid "Active users"
+msgstr "Người dùng hoạt động"
+
+#: insight active_30d
+msgid "Active users (30 days)"
+msgstr "Người dùng hoạt động (30 ngày)"
+
+#: insight active_7d
+msgid "Active users (7 days)"
+msgstr "Người dùng hoạt động (7 ngày)"
+
+#: insight active_1d
+msgid "Active users (day)"
+msgstr "Người dùng hoạt động (ngày)"
+
+#: platform-core/backend/platform_system/insights.py:380
+msgid "Active, last 30 days"
+msgstr "Hoạt động, 30 ngày qua"
+
+#: platform-core/backend/platform_system/insights.py:379
+msgid "Active, last 7 days"
+msgstr "Hoạt động, 7 ngày qua"
+
+#: insight active_1d
+#: insight active_30d
+#: insight active_7d
+msgid "Activity"
+msgstr "Hoạt động"
+
+#: schema platform_system.AuditEvent.actor_email
+msgid "Actor email"
+msgstr "Email người thực hiện"
+
+#: schema platform_system.AuditEvent.actor_id
+msgid "Actor id"
+msgstr "ID người thực hiện"
+
+#: schema platform_system.Suppression.reason
+msgid "Added by an admin"
+msgstr "Do quản trị viên thêm"
+
+#: platform-core/backend/platform_system/insights.py:385
+msgid "AI assistant only"
+msgstr "Chỉ Trợ lý AI"
+
+#: platform-core/backend/platform_system/info.py:45
+msgid "Allowed hosts"
+msgstr "Host được phép"
+
+#: platform-core/backend/platform_system/views.py:213
+msgid "Already sent."
+msgstr "Đã gửi rồi."
+
+#: setting email.ses_configuration_set
+msgid "Amazon SES configuration set"
+msgstr "Configuration set của Amazon SES"
+
+#: setting email.ses_topic_arns
+msgid "Amazon SNS topics for SES events"
+msgstr "Chủ đề Amazon SNS cho sự kiện SES"
+
+#: platform-core/backend/platform_system/email_views.py:53
+msgid "An object of category: true/false."
+msgstr "Một đối tượng dạng danh mục: true/false."
+
+#: setting system.announcement
+#: setting system.announcement_level
+msgid "Announcement"
+msgstr "Thông báo chung"
+
+#: setting system.announcement_level
+msgid "Announcement style"
+msgstr "Kiểu thông báo chung"
+
+#: platform-core/backend/platform_system/insights.py:457
+msgid "API endpoints (busiest 25)"
+msgstr "Endpoint API (25 endpoint bận nhất)"
+
+#: insight api_requests
+#: platform-core/backend/platform_system/insights.py:447
+msgid "API requests"
+msgstr "Yêu cầu API"
+
+#: setting email.ses_topic_arns
+msgid "ARNs of the SNS topics allowed to post bounces and complaints to /api/v1/email/ses-events. Empty: none accepted."
+msgstr "ARN của các chủ đề SNS được phép gửi email bị trả về và báo cáo spam đến /api/v1/email/ses-events. Để trống: không chấp nhận chủ đề nào."
+
+#: schema platform_system.OutgoingEmail.attempts
+msgid "Attempts"
+msgstr "Số lần thử"
+
+#: schema platform_system.AuditEvent
+msgid "audit event"
+msgstr "sự kiện kiểm tra"
+
+#: schema platform_system.AuditEvent
+msgid "audit events"
+msgstr "sự kiện kiểm tra"
+
+#: platform-core/backend/platform_system/insights.py:471
+msgid "Average"
+msgstr "Trung bình"
+
+#: platform-core/backend/platform_system/info.py:66
+msgid "Backend"
+msgstr "Backend"
+
+#: platform-core/backend/platform_system/insights.py:386
+msgid "Both"
+msgstr "Cả hai"
+
+#: platform-core/backend/platform_system/insights.py:383
+msgid "By channel, last {days} days"
+msgstr "Theo kênh, {days} ngày qua"
+
+#: platform-core/backend/platform_system/insights.py:462
+msgid "Calls"
+msgstr "Lượt gọi"
+
+#: schema platform_system.OutgoingEmail.category
+msgid "Category"
+msgstr "Danh mục"
+
+#: schema platform_system.DeliveryAttempt.channel
+msgid "Channel"
+msgstr "Kênh"
+
+#: platform-core/backend/platform_system/info.py:78
+msgid "Client ID"
+msgstr "Client ID"
+
+#: schema platform_system.Suppression.reason
+msgid "Complaint"
+msgstr "Báo cáo spam"
+
+#: platform-core/backend/platform_system/info.py:64
+msgid "Configured"
+msgstr "Đã cấu hình"
+
+#: core_api
+msgid "couldn't compute"
+msgstr "không tính được"
+
+#: schema platform_system.AuditEvent.created_at
+#: schema platform_system.DeliveryAttempt.created_at
+#: schema platform_system.OutgoingEmail.created_at
+msgid "Created at"
+msgstr "Tạo lúc"
+
+#: setting retention.insights_days
+msgid "Daily numbers, request counts and active days behind the Insights page. 0 = keep forever. Older rows are deleted once a day."
+msgstr "Số liệu hằng ngày, số yêu cầu và ngày hoạt động dùng cho trang Thống kê. 0 = giữ mãi mãi. Dữ liệu cũ hơn được xóa mỗi ngày một lần."
+
+#: schema platform_system.AuditEvent.data
+msgid "Data"
+msgstr "Dữ liệu"
+
+#: setting retention.audit_days
+#: setting retention.emails_days
+#: setting retention.insights_days
+msgid "Data retention"
+msgstr "Lưu giữ dữ liệu"
+
+#: platform-core/backend/platform_system/info.py:52
+msgid "Database"
+msgstr "Cơ sở dữ liệu"
+
+#: platform-core/backend/platform_system/insights.py:455
+msgid "Database size"
+msgstr "Dung lượng cơ sở dữ liệu"
+
+#: platform-core/backend/platform_system/insights.py:465
+msgid "Day"
+msgstr "Ngày"
+
+#: platform-core/backend/platform_system/info.py:46
+msgid "Debug"
+msgstr "Debug"
+
+#: platform-core/backend/platform_system/insights.py:464
+msgid "Deliveries per day"
+msgstr "Lượt gửi mỗi ngày"
+
+#: platform-core/backend/platform_system/info.py:40
+msgid "Deployment"
+msgstr "Triển khai"
+
+#: schema platform_system.Suppression.detail
+msgid "Detail"
+msgstr "Chi tiết"
+
+#: platform-core/backend/platform_system/info.py:85
+msgid "Django secret key"
+msgstr "Khóa bí mật Django"
+
+#: platform-core/backend/platform_system/info.py:62
+#: schema platform_system.Suppression.email
+#: setting email.from_name
+msgid "Email"
+msgstr "Email"
+
+#: platform-core/backend/platform_system/info.py:87
+msgid "Email password"
+msgstr "Mật khẩu email"
+
+#: insight emails_failed
+#: platform-core/backend/platform_system/insights.py:465
+msgid "Emails failed"
+msgstr "Email gửi lỗi"
+
+#: insight emails_sent
+#: platform-core/backend/platform_system/insights.py:465
+msgid "Emails sent"
+msgstr "Email đã gửi"
+
+#: platform-core/backend/platform_system/info.py:69
+msgid "Encryption"
+msgstr "Mã hóa"
+
+#: platform-core/backend/platform_system/insights.py:458
+msgid "Endpoint"
+msgstr "Endpoint"
+
+#: platform-core/backend/platform_system/info.py:54
+msgid "Engine"
+msgstr "Engine"
+
+#: core_api
+#: platform-core/backend/platform_system/insights.py:312
+#: schema platform_system.DeliveryAttempt.error
+msgid "Error"
+msgstr "Lỗi"
+
+#: platform-core/backend/platform_system/insights.py:458
+#: platform-core/backend/platform_system/insights.py:462
+msgid "Errors"
+msgstr "Lỗi"
+
+#: platform-core/backend/platform_system/info.py:47
+msgid "Extensions"
+msgstr "Tiện ích mở rộng"
+
+#: platform-core/backend/platform_system/insights.py:470
+#: schema platform_system.OutgoingEmail.status
+msgid "Failed"
+msgstr "Thất bại"
+
+#: platform-core/backend/platform_system/insights.py:452
+msgid "Failed logins"
+msgstr "Đăng nhập thất bại"
+
+#: platform-core/backend/platform_system/info.py:71
+msgid "From address"
+msgstr "Địa chỉ gửi"
+
+#: platform-core/backend/platform_system/views.py:153
+msgid "Give an address to send to."
+msgstr "Hãy nhập địa chỉ cần gửi đến."
+
+#: schema platform_system.Suppression.reason
+msgid "Hard bounce"
+msgstr "Bị trả về"
+
+#: schema platform_system.OutgoingEmail.headers
+msgid "Headers"
+msgstr "Header"
+
+#: platform-core/backend/platform_system/info.py:55
+msgid "Host"
+msgstr "Host"
+
+#: insight section quality
+msgid "How well it runs"
+msgstr "Mức độ vận hành ổn định"
+
+#: schema platform_system.AuditEvent.id
+#: schema platform_system.DeliveryAttempt.id
+#: schema platform_system.OutgoingEmail.id
+msgid "Id"
+msgstr "ID"
+
+#: platform-core/backend/core_api/errors.py:33
+msgid "Incorrect email or password."
+msgstr "Email hoặc mật khẩu không đúng."
+
+#: setting system.announcement_level
+msgid "Information"
+msgstr "Thông tin"
+
+#: platform-core/backend/core_api/errors.py:27
+msgid "Invalid or expired access token."
+msgstr "Token truy cập không hợp lệ hoặc đã hết hạn."
+
+#: schema platform_system.AuditEvent.ip
+msgid "Ip"
+msgstr "IP"
+
+#: platform-core/backend/platform_system/insights.py:470
+msgid "Job"
+msgstr "Tác vụ"
+
+#: setting retention.insights_days
+msgid "Keep Insights history for (days)"
+msgstr "Giữ lịch sử Thống kê trong (ngày)"
+
+#: setting retention.audit_days
+msgid "Keep the audit log for (days)"
+msgstr "Giữ nhật ký kiểm tra trong (ngày)"
+
+#: setting retention.emails_days
+msgid "Keep the email log for (days)"
+msgstr "Giữ nhật ký email trong (ngày)"
+
+#: setting retention.notifications_days
+msgid "Keep the notification log for (days)"
+msgstr "Giữ nhật ký thông báo trong (ngày)"
+
+#: schema platform_system.SystemSetting.key
+msgid "Key"
+msgstr "Khóa"
+
+#: schema platform_system.DeliveryAttempt.kind
+#: schema platform_system.OutgoingEmail.kind
+msgid "Kind"
+msgstr "Loại"
+
+#: schema platform_system.OutgoingEmail.last_error
+msgid "Last error"
+msgstr "Lỗi gần nhất"
+
+#: platform-core/backend/platform_system/info.py:58
+msgid "Latest migration"
+msgstr "Migration mới nhất"
+
+#: platform-core/backend/platform_system/insights.py:453
+msgid "Lockouts"
+msgstr "Lượt khóa tài khoản"
+
+#: platform-core/backend/platform_system/info.py:86
+msgid "Login token secret"
+msgstr "Khóa bí mật token đăng nhập"
+
+#: platform-core/backend/platform_system/insights.py:451
+msgid "MCP tool calls"
+msgstr "Lượt gọi công cụ MCP"
+
+#: platform-core/backend/platform_system/insights.py:461
+msgid "MCP tools"
+msgstr "Công cụ MCP"
+
+#: platform-core/backend/platform_system/insights.py:459
+msgid "Median"
+msgstr "Trung vị"
+
+#: platform-core/backend/platform_system/insights.py:449
+msgid "Median response"
+msgstr "Thời gian phản hồi trung vị"
+
+#: platform-core/backend/platform_system/info.py:42
+msgid "Mode"
+msgstr "Chế độ"
+
+#: platform-core/backend/platform_system/info.py:56
+msgid "Name"
+msgstr "Tên"
+
+#: schema platform_system.OutgoingEmail.next_attempt_at
+msgid "Next attempt at"
+msgstr "Lần thử tiếp theo lúc"
+
+#: platform-core/backend/core_api/viewsets.py:340
+msgid "No file."
+msgstr "Không có tệp."
+
+#: platform-core/backend/platform_system/insights.py:469
+msgid "No job runs counted yet."
+msgstr "Chưa ghi nhận lượt chạy tác vụ nào."
+
+#: platform-core/backend/platform_system/insights.py:461
+msgid "No MCP tool calls yet."
+msgstr "Chưa có lượt gọi công cụ MCP nào."
+
+#: platform-core/backend/platform_system/insights.py:457
+msgid "No requests counted yet."
+msgstr "Chưa ghi nhận yêu cầu nào."
+
+#: platform-core/backend/core_api/errors.py:37
+msgid "Not found."
+msgstr "Không tìm thấy."
+
+#: schema platform_system.Suppression.email
+msgid "Nothing is sent to this address, account mail included."
+msgstr "Không gửi gì đến địa chỉ này, kể cả email tài khoản."
+
+#: platform-core/backend/platform_system/insights.py:464
+msgid "Nothing sent in this range."
+msgstr "Không có gì được gửi trong khoảng thời gian này."
+
+#: schema platform_system.DeliveryAttempt
+msgid "notification"
+msgstr "thông báo"
+
+#: schema platform_system.DeliveryAttempt
+msgid "notifications"
+msgstr "thông báo"
+
+#: platform-core/backend/platform_system/insights.py:466
+msgid "Notifications failed"
+msgstr "Thông báo gửi lỗi"
+
+#: platform-core/backend/platform_system/insights.py:466
+msgid "Notifications sent"
+msgstr "Thông báo đã gửi"
+
+#: schema platform_system.DeliveryAttempt.ok
+msgid "Ok"
+msgstr "Thành công"
+
+#: platform-core/backend/core_api/system.py:122
+msgid "One of: {choices}."
+msgstr "Một trong: {choices}."
+
+#: schema platform_system.OutgoingEmail
+msgid "outgoing email"
+msgstr "email gửi đi"
+
+#: schema platform_system.OutgoingEmail
+msgid "outgoing emails"
+msgstr "email gửi đi"
+
+#: insight api_errors
+#: insight api_requests
+#: insight emails_failed
+msgid "Platform"
+msgstr "Nền tảng"
+
+#: setting email.postal_address
+msgid "Postal address"
+msgstr "Địa chỉ bưu chính"
+
+#: platform-core/backend/platform_system/info.py:77
+msgid "Provider"
+msgstr "Nhà cung cấp"
+
+#: schema platform_system.OutgoingEmail.status
+msgid "Queued"
+msgstr "Đang chờ gửi"
+
+#: setting retention.emails_days
+msgid "Queued emails are never deleted. 0 = keep forever. Older rows are deleted once a day."
+msgstr "Email đang chờ gửi không bao giờ bị xóa. 0 = giữ mãi mãi. Dữ liệu cũ hơn được xóa mỗi ngày một lần."
+
+#: platform-core/backend/platform_system/info.py:93
+msgid "Rate limits"
+msgstr "Giới hạn tần suất"
+
+#: platform-core/backend/platform_system/insights.py:454
+msgid "Rate-limited requests"
+msgstr "Yêu cầu bị giới hạn tần suất"
+
+#: schema platform_system.Suppression.reason
+msgid "Reason"
+msgstr "Lý do"
+
+#: setting email.reply_to
+msgid "Reply-to address"
+msgstr "Địa chỉ nhận phản hồi"
+
+#: core_api
+msgid "Request failed validation."
+msgstr "Yêu cầu không hợp lệ."
+
+#: core_api
+msgid "Request failed."
+msgstr "Yêu cầu thất bại."
+
+#: platform-core/backend/platform_system/insights.py:458
+msgid "Requests"
+msgstr "Yêu cầu"
+
+#: insight section quality
+msgid "Requests, response times and errors per endpoint, MCP tools, deliveries, jobs and sign-in security."
+msgstr "Yêu cầu, thời gian phản hồi và lỗi theo endpoint, công cụ MCP, lượt gửi, tác vụ và bảo mật đăng nhập."
+
+#: platform-core/backend/platform_system/insights.py:470
+msgid "Runs"
+msgstr "Lượt chạy"
+
+#: platform-core/backend/platform_system/insights.py:469
+msgid "Scheduled jobs"
+msgstr "Tác vụ theo lịch"
+
+#: platform-core/backend/platform_system/info.py:83
+msgid "Secrets"
+msgstr "Bí mật"
+
+#: setting email.from_name
+msgid "Sender name"
+msgstr "Tên người gửi"
+
+#: schema platform_system.OutgoingEmail.status
+msgid "Sent"
+msgstr "Đã gửi"
+
+#: schema platform_system.OutgoingEmail.sent_at
+msgid "Sent at"
+msgstr "Gửi lúc"
+
+#: setting email.ses_configuration_set
+msgid "Sent with every email (X-SES-CONFIGURATION-SET), so SES reports its bounces and complaints to the set's SNS topic. Empty: not using SES events."
+msgstr "Gửi kèm mọi email (X-SES-CONFIGURATION-SET), để SES báo email bị trả về và báo cáo spam đến chủ đề SNS của configuration set đó. Để trống: không dùng sự kiện SES."
+
+#: platform-core/backend/platform_system/info.py:67
+msgid "Server"
+msgstr "Máy chủ"
+
+#: insight api_errors
+#: platform-core/backend/platform_system/insights.py:448
+msgid "Server errors"
+msgstr "Lỗi máy chủ"
+
+#: platform-core/backend/platform_system/info.py:57
+msgid "Server version"
+msgstr "Phiên bản máy chủ"
+
+#: setting email.postal_address
+msgid "Shown at the bottom of every email a user can unsubscribe from (anti-spam laws ask for one)."
+msgstr "Hiển thị ở cuối mọi email mà người dùng có thể hủy đăng ký (luật chống spam yêu cầu điều này)."
+
+#: setting system.announcement
+msgid "Shown at the top of every page for signed-in users - e.g. planned maintenance. Empty: none."
+msgstr "Hiển thị ở đầu mọi trang cho người dùng đã đăng nhập - ví dụ: lịch bảo trì. Để trống: không hiển thị."
+
+#: insight active_1d
+#: insight active_30d
+#: insight active_7d
+msgid "Signed in, refreshed a session, used an AI assistant or checked in."
+msgstr "Đã đăng nhập, làm mới phiên, dùng Trợ lý AI hoặc check-in."
+
+#: platform-core/backend/platform_system/info.py:75
+msgid "Single sign-on"
+msgstr "Đăng nhập một lần (SSO)"
+
+#: platform-core/backend/platform_system/info.py:88
+msgid "Single sign-on client secret"
+msgstr "Client secret của đăng nhập một lần (SSO)"
+
+#: schema platform_system.OutgoingEmail.status
+msgid "Status"
+msgstr "Trạng thái"
+
+#: insight stickiness
+#: platform-core/backend/platform_system/insights.py:381
+msgid "Stickiness"
+msgstr "Độ gắn bó"
+
+#: schema platform_system.OutgoingEmail.subject
+msgid "Subject"
+msgstr "Tiêu đề"
+
+#: platform-core/backend/platform_system/insights.py:467
+msgid "Success"
+msgstr "Thành công"
+
+#: schema platform_system.OutgoingEmail.status
+msgid "Suppressed"
+msgstr "Bị chặn gửi"
+
+#: schema platform_system.Suppression
+msgid "suppressed address"
+msgstr "địa chỉ bị chặn gửi"
+
+#: schema platform_system.Suppression
+msgid "suppressed addresses"
+msgstr "địa chỉ bị chặn gửi"
+
+#: schema platform_system.SystemSetting
+msgid "system setting"
+msgstr "cài đặt hệ thống"
+
+#: schema platform_system.SystemSetting
+msgid "system settings"
+msgstr "cài đặt hệ thống"
+
+#: schema platform_system.DeliveryAttempt.target
+msgid "Target"
+msgstr "Chỉ tiêu"
+
+#: schema platform_system.AuditEvent.target_id
+msgid "Target id"
+msgstr "ID đối tượng"
+
+#: schema platform_system.AuditEvent.target_label
+msgid "Target label"
+msgstr "Nhãn đối tượng"
+
+#: schema platform_system.AuditEvent.target_type
+msgid "Target type"
+msgstr "Loại đối tượng"
+
+#: schema platform_system.OutgoingEmail.text
+msgid "Text"
+msgstr "Nội dung"
+
+#: setting email.from_name
+msgid "The name emails come from; the address itself is EMAIL_FROM."
+msgstr "Tên hiển thị của người gửi email; còn địa chỉ là EMAIL_FROM."
+
+#: platform-core/backend/platform_system/views.py:101
+msgid "This field is required."
+msgstr "Trường này là bắt buộc."
+
+#: platform-core/backend/platform_system/email_views.py:84
+msgid "This link isn't valid."
+msgstr "Liên kết này không hợp lệ."
+
+#: platform-core/backend/core_api/system.py:408
+msgid "This organization has reached its limit of {limit} {what}."
+msgstr "Tổ chức này đã đạt giới hạn {limit} {what}."
+
+#: schema platform_system.OutgoingEmail.to
+msgid "To"
+msgstr "Đến"
+
+#: platform-core/backend/core_api/errors.py:52
+msgid "Too many attempts. Try again later."
+msgstr "Quá nhiều lần thử. Vui lòng thử lại sau."
+
+#: platform-core/backend/platform_system/insights.py:462
+msgid "Tool"
+msgstr "Công cụ"
+
+#: platform-core/backend/platform_system/info.py:48
+msgid "Trusted proxies"
+msgstr "Proxy tin cậy"
+
+#: platform-core/backend/core_api/viewsets.py:306
+#: platform-core/backend/core_api/viewsets.py:490
+msgid "Unknown id: {id}"
+msgstr "ID không xác định: {id}"
+
+#: platform-core/backend/platform_system/views.py:96
+msgid "Unknown setting."
+msgstr "Cài đặt không xác định."
+
+#: schema platform_system.SystemSetting.updated_at
+msgid "Updated at"
+msgstr "Cập nhật lúc"
+
+#: schema platform_system.SystemSetting.updated_by
+msgid "Updated by"
+msgstr "Cập nhật bởi"
+
+#: setting system.announcement_level
+msgid "Urgent"
+msgstr "Khẩn cấp"
+
+#: platform-core/backend/platform_system/info.py:68
+msgid "User"
+msgstr "Người dùng"
+
+#: schema platform_system.AuditEvent.user_agent
+msgid "User agent"
+msgstr "User agent"
+
+#: schema platform_system.DeliveryAttempt.user_id
+#: schema platform_system.OutgoingEmail.user_id
+msgid "User id"
+msgstr "ID người dùng"
+
+#: schema platform_system.SystemSetting.value
+msgid "Value"
+msgstr "Giá trị"
+
+#: platform-core/backend/platform_system/info.py:43
+msgid "Version"
+msgstr "Phiên bản"
+
+#: setting system.announcement_level
+msgid "Warning"
+msgstr "Cảnh báo"
+
+#: platform-core/backend/platform_system/insights.py:384
+msgid "Website only"
+msgstr "Chỉ trang web"
+
+#: setting email.reply_to
+msgid "Where replies go - e.g. your support inbox. Empty: the sender address."
+msgstr "Nơi nhận thư trả lời - ví dụ: hộp thư hỗ trợ của bạn. Để trống: địa chỉ người gửi."
+
+#: schema platform_system.Suppression.detail
+msgid "Why - the bounce's diagnostic, or a note."
+msgstr "Lý do - thông tin chẩn đoán của email bị trả về, hoặc một ghi chú."
+
+#: platform-core/backend/core_api/errors.py:43
+msgid "You do not have permission to perform this action."
+msgstr "Bạn không có quyền thực hiện thao tác này."
+
+#: platform-core/backend/platform_system/insights.py:448
+msgid "{count} requests answered 5xx"
+msgstr "{count} yêu cầu trả về 5xx"
+
+#: platform-core/backend/platform_system/views.py:116
+msgid "{setting} can't be changed here."
+msgstr "Không thể thay đổi {setting} tại đây."
+
+#: platform-core/backend/platform_system/store.py:42
+msgid "{setting} is read-only."
+msgstr "{setting} chỉ được xem."
+
+#: platform-core/backend/platform_system/store.py:44
+msgid "{setting} is set by {env} in the environment."
+msgstr "{setting} được đặt bởi {env} trong môi trường."

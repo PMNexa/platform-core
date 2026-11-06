@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "../components";
 import type { EmailCategoryChoice } from "../email/api";
+import { formatDateTime, useLocale, useT } from "../i18n";
 import { lifecycleApi, type LifecycleSendRow } from "./api";
+import messages from "./messages";
 
 export interface UserLifecyclePanelProps {
   accessToken: string;
   userId: string;
 }
-
-const WHEN = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
 /**
  * For a user's page in the system console: their email preferences and
@@ -17,6 +17,8 @@ const WHEN = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle
  * installed (the API answers 404).
  */
 function UserLifecyclePanel({ accessToken, userId }: UserLifecyclePanelProps) {
+  const t = useT(messages);
+  const locale = useLocale();
   const api = useMemo(() => lifecycleApi(accessToken), [accessToken]);
   const [data, setData] = useState<{ categories: EmailCategoryChoice[]; sends: LifecycleSendRow[] } | null>(null);
   const [hidden, setHidden] = useState(false);
@@ -38,42 +40,42 @@ function UserLifecyclePanel({ accessToken, userId }: UserLifecyclePanelProps) {
   return (
     <Card className="mt-3">
       <CardHeader>
-        <CardTitle>Lifecycle email</CardTitle>
+        <CardTitle>{t("panelTitle")}</CardTitle>
       </CardHeader>
       <CardBody className="border-bottom">
-        <span className="text-secondary">Turned off: </span>
-        {off.length ? off.map((c) => c.label).join(", ") : "nothing - every category is on"}
+        <span className="text-secondary">{t("turnedOff")} </span>
+        {off.length ? off.map((c) => c.label).join(", ") : t("nothingOff")}
       </CardBody>
       {data.sends.length === 0 ? (
-        <CardBody className="text-secondary">No lifecycle email yet.</CardBody>
+        <CardBody className="text-secondary">{t("noneYet")}</CardBody>
       ) : (
         <div className="table-responsive">
           <table className="table table-vcenter card-table">
             <thead>
               <tr>
-                <th>When</th>
-                <th>Email</th>
-                <th>Then</th>
+                <th>{t("colWhen")}</th>
+                <th>{t("colEmail")}</th>
+                <th>{t("colThen")}</th>
               </tr>
             </thead>
             <tbody>
               {data.sends.map((send) => (
                 <tr key={send.id}>
-                  <td className="text-nowrap">{WHEN.format(new Date(send.sent_at))}</td>
+                  <td className="text-nowrap">{formatDateTime(send.sent_at, { dateStyle: "medium", timeStyle: "short" }, locale)}</td>
                   <td>
                     {send.subject}
                     <div className="small text-secondary">
                       <code>
                         {send.journey}.{send.step}
                       </code>
-                      {send.holdout && <Badge className="ms-2">holdout - not sent</Badge>}
+                      {send.holdout && <Badge className="ms-2">{t("holdoutNotSent")}</Badge>}
                     </div>
                   </td>
                   <td className="small">
                     {[
-                      send.clicked_at && "clicked",
-                      send.converted_at && "converted",
-                      send.unsubscribed_at && "unsubscribed",
+                      send.clicked_at && t("clicked"),
+                      send.converted_at && t("converted"),
+                      send.unsubscribed_at && t("unsubscribed"),
                     ]
                       .filter(Boolean)
                       .join(", ") || <span className="text-secondary">—</span>}

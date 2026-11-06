@@ -19,6 +19,8 @@ import { createSchemaFields } from "../../lib/schemaFields";
 import type { CrudField } from "../../lib/types";
 import CrudFormModal from "../CrudFormModal";
 import CrudLinkModal from "../CrudLinkModal";
+import { useLocale, useT } from "../../../../i18n";
+import messages from "../../messages";
 
 type Row = Record<string, unknown>;
 
@@ -87,8 +89,8 @@ function CrudRelationSection(props: CrudRelationSectionProps) {
   if (!schema)
     return (
       <div className="card-body">
-          <Spinner />
-        </div>
+        <Spinner />
+      </div>
     );
   return <CrudRelationTable {...props} relatedApi={relatedApi} schema={schema} />;
 }
@@ -112,6 +114,8 @@ function CrudRelationTable({
   schema,
   parentCanUpdate = true,
 }: CrudRelationTableProps) {
+  const t = useT(messages);
+  const locale = useLocale();
   const Link = linkComponent ?? DefaultLink;
   const isManyToMany = relation.kind === "many_to_many";
   const backFilter = relation.back_filter ?? "";
@@ -142,8 +146,8 @@ function CrudRelationTable({
   const displayFields = useRelatedDisplayFields(relationFields, request);
   const [bareLabels, setLabelledRows] = useBareRelationLabels(relationFields, request);
   const schemaColumns = useMemo(
-    () => createSchemaColumns<Row>(schema, displayFields, bareLabels).filter((column) => column.key !== backFilter),
-    [schema, backFilter, displayFields, bareLabels],
+    () => createSchemaColumns<Row>(schema, displayFields, bareLabels, locale).filter((column) => column.key !== backFilter),
+    [schema, backFilter, displayFields, bareLabels, locale],
   );
 
   function changed() {
@@ -153,7 +157,7 @@ function CrudRelationTable({
 
   async function handleRemove(row: Row) {
     const id = rowKey(row);
-    if (!window.confirm(isManyToMany ? "Unlink this item? The item itself is kept." : "Delete this item?")) return;
+    if (!window.confirm(isManyToMany ? t("confirmUnlink") : t("confirmDeleteItem"))) return;
     setBusyId(id);
     try {
       if (isManyToMany) await parentApi.unlink(parentId, relation.name, [id]);
@@ -214,12 +218,12 @@ function CrudRelationTable({
         return (
           <div className="d-flex gap-1 justify-content-end text-nowrap">
             {relatedDetailPath && (
-              <Link to={relatedDetailPath(id)} className="btn btn-ghost-secondary btn-icon btn-sm" aria-label={`View ${name}`}>
+              <Link to={relatedDetailPath(id)} className="btn btn-ghost-secondary btn-icon btn-sm" aria-label={t("viewName", { name })}>
                 <Icon name="eye" />
               </Link>
             )}
             {canEdit && (
-              <Button icon className="btn-ghost-secondary" aria-label={`Edit ${name}`} title="Edit" onClick={() => setModal({ type: "edit", id })}>
+              <Button icon className="btn-ghost-secondary" aria-label={t("editName", { name })} title={t("edit")} onClick={() => setModal({ type: "edit", id })}>
                 <Icon name="pencil" />
               </Button>
             )}
@@ -227,8 +231,8 @@ function CrudRelationTable({
               <Button
                 icon
                 className="btn-ghost-danger"
-                aria-label={`${isManyToMany ? "Unlink" : "Delete"} ${name}`}
-                title={isManyToMany ? "Unlink" : "Delete"}
+                aria-label={isManyToMany ? t("unlinkName", { name }) : t("deleteName", { name })}
+                title={isManyToMany ? t("unlink") : t("delete")}
                 disabled={busyId === id}
                 onClick={() => handleRemove(row)}
               >
@@ -255,7 +259,7 @@ function CrudRelationTable({
   });
   useEffect(() => setLabelledRows(table.items), [table.items, setLabelledRows]);
 
-  const singular = schema.label ?? "item";
+  const singular = schema.label ?? t("item");
   const plural = schema.label_plural ?? relation.label.toLowerCase();
   // Nothing related yet (not a search that matched nothing): one empty
   // state with the actions, instead of a bare header row + "No results."
@@ -270,13 +274,13 @@ function CrudRelationTable({
       {canLink && (
         <Button variant="primary" outline onClick={() => setModal({ type: "link" })}>
           <Icon name="link" />
-          Link existing
+          {t("linkExisting")}
         </Button>
       )}
       {canCreate && (
         <Button variant="primary" onClick={() => setModal({ type: "new" })}>
           <Icon name="plus" />
-          New {singular}
+          {t("newLabel", { label: singular })}
         </Button>
       )}
     </>
@@ -290,15 +294,15 @@ function CrudRelationTable({
         </div>
       ) : isEmpty ? (
         <div className="empty py-5">
-          <p className="empty-title">No {plural} yet</p>
+          <p className="empty-title">{t("emptyTitle", { plural })}</p>
           <p className="empty-subtitle text-secondary">
             {canLink && canCreate
-              ? `Link existing ${plural} or create a new one.`
+              ? t("emptyLinkOrCreate", { plural })
               : canLink
-                ? `Link existing ${plural}.`
+                ? t("emptyLink", { plural })
                 : canCreate
-                  ? `Add the first ${singular}.`
-                  : `Nothing here yet.`}
+                  ? t("emptyCreate", { label: singular })
+                  : t("emptyNothing")}
           </p>
           <div className="empty-action d-flex gap-2 justify-content-center">{actions}</div>
         </div>
@@ -308,8 +312,8 @@ function CrudRelationTable({
             {schema.searchable && (
               <FormControl
                 type="search"
-                aria-label={`Search ${plural}`}
-                placeholder={`Search ${plural}…`}
+                aria-label={t("searchPlural", { plural })}
+                placeholder={t("searchPluralPlaceholder", { plural })}
                 value={table.search}
                 onChange={(event) => table.setSearch(event.target.value)}
                 style={{ maxWidth: 240 }}
@@ -336,17 +340,17 @@ function CrudRelationTable({
 
       <CrudFormModal
         open={modal?.type === "new"}
-        title={`New ${singular}`}
+        title={t("newLabel", { label: singular })}
         fields={[...rowFields, ...throughFields]}
         request={request}
-        submitLabel={isManyToMany ? "Create and link" : "Create"}
+        submitLabel={isManyToMany ? t("createAndLink") : t("create")}
         onSubmit={handleCreate}
         onClose={() => setModal(null)}
         layout={schema.form_layout}
       />
       <CrudFormModal
         open={modal?.type === "edit"}
-        title={`Edit ${singular}`}
+        title={t("editLabel", { label: singular })}
         fields={rowFields}
         request={request}
         load={() => relatedApi.read(modal?.type === "edit" ? modal.id : "")}

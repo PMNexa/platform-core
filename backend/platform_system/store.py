@@ -6,6 +6,9 @@ every other worker's next request."""
 
 import time
 
+from django.utils.translation import gettext
+
+from core_api.i18n import tr
 from core_api.system import env_value, parse_setting, setting_definition
 
 from platform_system.models import SystemSetting
@@ -36,9 +39,10 @@ def save(key: str, raw, user_id: str = ""):
     a read-only or env-locked one."""
     definition = setting_definition(key)
     if not definition.editable:
-        raise PermissionError(f"{definition.label} is read-only.")
+        raise PermissionError(gettext("{setting} is read-only.").format(setting=tr(definition.label)))
     if env_value(definition)[0]:
-        raise PermissionError(f"{definition.label} is set by {definition.env} in the environment.")
+        raise PermissionError(gettext("{setting} is set by {env} in the environment.").format(
+            setting=tr(definition.label), env=definition.env))
     value = parse_setting(definition, raw)
     if definition.validate:
         definition.validate(value)

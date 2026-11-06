@@ -16,6 +16,7 @@ against a real dataset instead of a handful of local test rows.
 import os
 
 from django.db import models, transaction
+from django.utils.translation import gettext
 from django.http import FileResponse
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -27,6 +28,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core_api.access import CREATE, DELETE, UPDATE, AccessPolicyPermission, get_access_policy
+from core_api.i18n import tr, tr_texts
 from core_api.filters import DynamicFilterBackend, QParamSearchFilter, SortParamOrderingFilter
 from core_api.pagination import EnvelopePageNumberPagination
 from core_api.registry import endpoint_model, model_endpoint, model_viewset, register_model_viewset
@@ -86,7 +88,7 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
         "type": _field_type(field),
         "required": bool(getattr(field, "required", False)),
         "read_only": bool(getattr(field, "read_only", False)),
-        "label": str(getattr(field, "label", None) or name),
+        "label": tr(getattr(field, "label", None) or name),
         # Whether an explicit null is accepted - lets a generic form tell
         # "clear this optional value" (send null) apart from "leave it to
         # the server's default" (omit the key) for an emptied input.
@@ -105,7 +107,7 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
         description["multiline"] = True
     help_text = getattr(field, "help_text", None)
     if help_text:
-        description["help_text"] = str(help_text)
+        description["help_text"] = tr(help_text)
     if isinstance(field, drf_serializers.FileField) and getattr(field, "style", {}).get("accept"):
         # What the file picker offers (`style={"accept": ".pdf,.epub"}` on
         # the serializer field) - a hint for the form; the server validates.
@@ -121,7 +123,7 @@ def _describe_field(name: str, field, *, deferred: bool, cross_module_endpoint: 
             description["items"] = _describe_field("item", child, deferred=False)
             description["items"].pop("name")
     if isinstance(field, drf_serializers.ChoiceField):
-        description["choices"] = [{"value": value, "label": str(label)} for value, label in field.choices.items()]
+        description["choices"] = [{"value": value, "label": tr(label)} for value, label in field.choices.items()]
         default = _choice_default(field, model)
         if default is not None:
             description["default"] = default
@@ -301,7 +303,7 @@ class BaseViewSet(ModelViewSet):
             model = endpoint_model(endpoint)
             scoped = _scoped_queryset(model, self.request) if model else None
             if scoped is not None and not scoped.filter(pk=value).exists():
-                raise ValidationError({name: [f"Unknown id: {value}"]})
+                raise ValidationError({name: [gettext("Unknown id: {id}").format(id=value)]})
 
     @classmethod
     def get_extra_actions(cls):
@@ -398,6 +400,12 @@ class BaseViewSet(ModelViewSet):
         `cross_module_endpoint` branch for why that field can never just
         BE one.
         """
+        return Response({**self.describe_resource(), "can": self._capabilities(request)})
+
+    def describe_resource(self) -> dict:
+        """The body of `GET <resource>/schema` minus `can` (which depends on
+        the caller) - texts in the active language (core_api/i18n.py).
+        `manage.py collect_ui_strings` reads it in English."""
         serializer = self.get_serializer_class()()
         fields = serializer.get_fields()
         deferred = getattr(serializer, "_auto_deferred", set())
@@ -413,28 +421,25 @@ class BaseViewSet(ModelViewSet):
         # How a generic form lays these fields out (sections, order,
         # show-when rules) - the frontend's `FormLayout`. Optional.
         form_layout = getattr(serializer.Meta, "form_layout", None)
-        return Response(
-            {
-                **({"form_layout": form_layout} if form_layout else {}),
-                # Resource-level description, so a generic UI never has
-                # to guess names from a URL or a row's shape.
-                "label": str(model._meta.verbose_name),
-                "label_plural": str(model._meta.verbose_name_plural),
-                "display_field": _display_field(serializer, fields, model),
-                "searchable": bool(getattr(self, "search_fields", None)),
-                "can": self._capabilities(request),
-                "fields": [
-                    _describe_field(
-                        name,
-                        field,
-                        deferred=name in deferred,
-                        cross_module_endpoint=related_endpoints.get(name),
-                        model=model,
-                    )
-                    for name, field in fields.items()
-                ],
-            }
-        )
+        return {
+            **({"form_layout": tr_texts(form_layout)} if form_layout else {}),
+            # Resource-level description, so a generic UI never has
+            # to guess names from a URL or a row's shape.
+            "label": tr(model._meta.verbose_name),
+            "label_plural": tr(model._meta.verbose_name_plural),
+            "display_field": _display_field(serializer, fields, model),
+            "searchable": bool(getattr(self, "search_fields", None)),
+            "fields": [
+                _describe_field(
+                    name,
+                    field,
+                    deferred=name in deferred,
+                    cross_module_endpoint=related_endpoints.get(name),
+                    model=model,
+                )
+                for name, field in fields.items()
+            ],
+        }
 
     def _capabilities(self, request) -> dict:
         """What the caller can do here: the viewset serves the method AND
@@ -482,7 +487,7 @@ class BaseViewSet(ModelViewSet):
         related = list(scoped.filter(pk__in=ids))
         if len(related) != len(ids):
             found = {str(row.pk) for row in related}
-            raise ValidationError({"ids": [f"Unknown id: {value}" for value in ids if value not in found]})
+            raise ValidationError({"ids": [gettext("Unknown id: {id}").format(id=value) for value in ids if value not in found]})
 
         through_defaults = {}
         through_class = through_serializer_class(relation.through) if relation.through else None

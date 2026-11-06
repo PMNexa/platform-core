@@ -1,0 +1,176 @@
+# platform_lifecycle: the API's user-visible texts. Written by `manage.py collect_ui_strings`;
+# fill in msgstr, then `msgfmt -o django.mo django.po`.
+msgid ""
+msgstr ""
+"Project-Id-Version: platform_lifecycle\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: platform-core/backend/platform_lifecycle/apps.py:63
+msgid "0 or more."
+msgstr "Từ 0 trở lên."
+
+#: platform-core/backend/platform_lifecycle/apps.py:68
+msgid "An hour from 0 to 23."
+msgstr "Một giờ từ 0 đến 23."
+
+#: schema platform_lifecycle.LifecycleSend.clicked_at
+msgid "Clicked at"
+msgstr "Nhấp lúc"
+
+#: schema platform_lifecycle.LifecycleSend.converted_at
+msgid "Converted at"
+msgstr "Chuyển đổi lúc"
+
+#: setting retention.lifecycle_signals_days
+msgid "Data retention"
+msgstr "Lưu giữ dữ liệu"
+
+#: schema platform_lifecycle.LifecycleSend.email
+msgid "Email"
+msgstr "Email"
+
+#: platform-core/backend/platform_lifecycle/apps.py:73
+msgid "From 0 to 50."
+msgstr "Từ 0 đến 50."
+
+#: schema platform_lifecycle.LifecycleSend.holdout
+msgid "Holdout"
+msgstr "Nhóm đối chứng"
+
+#: setting lifecycle.holdout_percent
+msgid "Holdout (%)"
+msgstr "Nhóm đối chứng (%)"
+
+#: setting lifecycle.quiet_end
+msgid "Hour (0-23) sending resumes. Same as the start: no quiet hours."
+msgstr "Giờ (0-23) tiếp tục gửi. Trùng với giờ bắt đầu: không có giờ yên lặng."
+
+#: setting lifecycle.quiet_start
+msgid "Hour (0-23, the user's time zone) from which nothing is sent; it waits until quiet hours end."
+msgstr "Giờ (0-23, theo múi giờ của người dùng) từ đó không gửi gì; email sẽ chờ đến khi hết giờ yên lặng."
+
+#: schema platform_lifecycle.LifecycleSend.id
+msgid "Id"
+msgstr "ID"
+
+#: schema platform_lifecycle.LifecycleSend.holdout
+msgid "In the holdout: recorded, not sent - what the journey is measured against."
+msgstr "Thuộc nhóm đối chứng: được ghi nhận, không gửi - là mốc để đo hiệu quả của hành trình."
+
+#: schema platform_lifecycle.LifecycleSend.journey
+msgid "Journey"
+msgstr "Hành trình"
+
+#: setting retention.lifecycle_signals_days
+msgid "Keep lifecycle signals for (days)"
+msgstr "Giữ tín hiệu vòng đời trong (ngày)"
+
+#: setting lifecycle.enabled
+#: setting lifecycle.frequency_cap
+#: setting lifecycle.holdout_percent
+msgid "Lifecycle email"
+msgstr "Email vòng đời"
+
+#: schema platform_lifecycle.LifecycleSend
+msgid "lifecycle email"
+msgstr "email vòng đời"
+
+#: schema platform_lifecycle.LifecycleSend
+msgid "lifecycle emails"
+msgstr "email vòng đời"
+
+#: setting lifecycle.frequency_cap
+msgid "Lifecycle emails only; a step over the cap waits. 0: no cap."
+msgstr "Chỉ áp dụng cho email vòng đời; bước vượt giới hạn sẽ chờ. 0: không giới hạn."
+
+#: setting lifecycle.frequency_cap
+msgid "Most emails per user per 7 days"
+msgstr "Số email tối đa cho mỗi người dùng trong 7 ngày"
+
+#: setting lifecycle.sunset_days
+msgid "No lifecycle email (except win-back) to someone inactive this long, until they're back. 0: never."
+msgstr "Không gửi email vòng đời (trừ email kéo người dùng quay lại) cho người không hoạt động lâu như vậy, cho đến khi họ quay lại. 0: không bao giờ dừng."
+
+#: platform-core/backend/platform_lifecycle/views.py:119
+msgid "No such user."
+msgstr "Không có người dùng này."
+
+#: setting lifecycle.enabled
+msgid "Onboarding, tips, milestones and win-back emails (System > Lifecycle email). Users can turn each kind off. Needs PUBLIC_URL for the links."
+msgstr "Email hướng dẫn bắt đầu, mẹo, cột mốc và kéo người dùng quay lại (Hệ thống > Email vòng đời). Người dùng có thể tắt từng loại. Cần PUBLIC_URL cho các liên kết."
+
+#: setting lifecycle.quiet_end
+msgid "Quiet hours end"
+msgstr "Giờ yên lặng kết thúc"
+
+#: setting lifecycle.quiet_start
+msgid "Quiet hours start"
+msgstr "Giờ yên lặng bắt đầu"
+
+#: setting lifecycle.enabled
+msgid "Send lifecycle email"
+msgstr "Gửi email vòng đời"
+
+#: schema platform_lifecycle.LifecycleSend.sent_at
+msgid "Sent at"
+msgstr "Gửi lúc"
+
+#: setting lifecycle.holdout_percent
+msgid "Share of new enrollments that get no email, to measure the journeys against. 0: none."
+msgstr "Tỷ lệ lượt tham gia mới không nhận email nào, dùng làm mốc đo hiệu quả của hành trình. 0: không có."
+
+#: platform-core/backend/platform_lifecycle/views.py:154
+msgid "Skipped for this user - its condition doesn't hold."
+msgstr "Đã bỏ qua với người dùng này - điều kiện của bước không thỏa."
+
+#: schema platform_lifecycle.LifecycleSend.step
+msgid "Step"
+msgstr "Bước"
+
+#: setting lifecycle.sunset_days
+msgid "Stop after inactive for (days)"
+msgstr "Dừng sau khi không hoạt động (ngày)"
+
+#: schema platform_lifecycle.LifecycleSend.subject
+msgid "Subject"
+msgstr "Tiêu đề"
+
+#: schema platform_lifecycle.LifecycleSend.target
+msgid "Target"
+msgstr "Chỉ tiêu"
+
+#: schema platform_lifecycle.LifecycleSend.target
+msgid "The action this step is for; converted = it followed within 72 hours."
+msgstr "Hành động mà bước này hướng tới; chuyển đổi = hành động đó diễn ra trong vòng 72 giờ."
+
+#: platform-core/backend/platform_lifecycle/views.py:37
+msgid "This link isn't valid."
+msgstr "Liên kết này không hợp lệ."
+
+#: platform-core/backend/platform_lifecycle/views.py:112
+msgid "Unknown journey."
+msgstr "Hành trình không xác định."
+
+#: platform-core/backend/platform_lifecycle/views.py:115
+msgid "Unknown step."
+msgstr "Bước không xác định."
+
+#: schema platform_lifecycle.LifecycleSend.unsubscribed_at
+msgid "Unsubscribed at"
+msgstr "Hủy đăng ký lúc"
+
+#: schema platform_lifecycle.LifecycleSend.user_id
+msgid "User id"
+msgstr "ID người dùng"
+
+#: setting retention.lifecycle_signals_days
+msgid "What users did, kept to match emails with the actions that followed. 0 = keep forever. Older rows are deleted once a day."
+msgstr "Hành động của người dùng, được giữ lại để đối chiếu email với các hành động sau đó. 0 = giữ mãi mãi. Dữ liệu cũ hơn được xóa mỗi ngày một lần."
+
+#: platform-core/backend/platform_lifecycle/views.py:105
+msgid "Which user?"
+msgstr "Người dùng nào?"

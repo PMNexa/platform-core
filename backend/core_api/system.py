@@ -62,9 +62,32 @@ class SettingDef:
 
 _settings: dict[str, SettingDef] = {}
 
+#: `(registry, key)` -> the module that registered it (`registered_by`).
+_owners: dict[tuple[str, str], str] = {}
+
+
+def _note_owner(registry: str, key: str) -> None:
+    """Remembers which module registered `key` - the first caller outside
+    this file - so `manage.py collect_ui_strings` files its label under
+    that module's app (its `locale/`)."""
+    import sys
+
+    frame = sys._getframe(1)
+    while frame is not None and frame.f_globals.get("__name__") == __name__:
+        frame = frame.f_back
+    _owners[(registry, key)] = frame.f_globals.get("__name__", "") if frame is not None else ""
+
+
+def registered_by(registry: str, key: str) -> str:
+    """The module that registered `key` in `registry` ("setting",
+    "email_category", "session_provider", "usage_provider",
+    "insight_series", "insight_section"), or ""."""
+    return _owners.get((registry, key), "")
+
 
 def register_setting(definition: SettingDef) -> None:
     _settings[definition.key] = definition
+    _note_owner("setting", definition.key)
 
 
 def setting_definitions() -> list[SettingDef]:
@@ -94,7 +117,9 @@ def parse_setting(definition: SettingDef, raw: Any) -> Any:
     if definition.type == CHOICE:
         value = str(raw)
         if definition.choices and value not in {c[0] for c in definition.choices}:
-            raise ValueError(f"One of: {', '.join(c[0] for c in definition.choices)}.")
+            from django.utils.translation import gettext
+
+            raise ValueError(gettext("One of: {choices}.").format(choices=", ".join(c[0] for c in definition.choices)))
         return value
     return "" if raw is None else str(raw)
 
@@ -180,6 +205,7 @@ _email_categories: dict[str, EmailCategory] = {}
 
 def register_email_category(category: EmailCategory) -> None:
     _email_categories[category.key] = category
+    _note_owner("email_category", category.key)
 
 
 def email_categories() -> list[EmailCategory]:
@@ -264,6 +290,7 @@ _session_providers: dict[str, SessionProvider] = {}
 
 def register_session_provider(provider: SessionProvider) -> None:
     _session_providers[provider.kind] = provider
+    _note_owner("session_provider", provider.kind)
 
 
 def session_providers() -> list[SessionProvider]:
@@ -337,6 +364,7 @@ _usage_providers: list[UsageProvider] = []
 
 def register_usage_provider(provider: UsageProvider) -> None:
     _usage_providers.append(provider)
+    _note_owner("usage_provider", provider.group)
 
 
 def usage_providers() -> list[UsageProvider]:
@@ -372,9 +400,13 @@ def check_org_limit(org_id, key: str, current: int, what: str) -> None:
     """Raises a 403 `limit_reached` when one more `what` would pass the limit."""
     limit = org_limit(org_id, key)
     if limit and current >= limit:
+        from django.utils.translation import gettext
+
         from core_api.errors import ApiError
 
-        raise ApiError(403, "limit_reached", f"This organization has reached its limit of {limit} {what}.")
+        # `what` is a plural noun the caller marks with `gettext_noop`.
+        raise ApiError(403, "limit_reached", gettext("This organization has reached its limit of {limit} {what}.").format(
+            limit=limit, what=gettext(what)))
 
 
 # --- personal data export (GDPR) -------------------------------------------
@@ -423,7 +455,9 @@ _retention_rules: dict[str, RetentionRule] = {}
 
 def _non_negative(value) -> None:
     if int(value) < 0:
-        raise ValueError("0 (keep forever) or more days.")
+        from django.utils.translation import gettext
+
+        raise ValueError(gettext("0 (keep forever) or more days."))
 
 
 def register_retention_rule(rule: RetentionRule) -> None:
@@ -559,6 +593,7 @@ _insight_sections: dict[str, InsightSection] = {}
 
 def register_insight_series(series: InsightSeries) -> None:
     _insight_series[series.key] = series
+    _note_owner("insight_series", series.key)
 
 
 def insight_series() -> list[InsightSeries]:
@@ -567,6 +602,7 @@ def insight_series() -> list[InsightSeries]:
 
 def register_insight_section(section: InsightSection) -> None:
     _insight_sections[section.key] = section
+    _note_owner("insight_section", section.key)
 
 
 def insight_sections() -> list[InsightSection]:

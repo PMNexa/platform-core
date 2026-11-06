@@ -34,6 +34,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["core_api*", "platform_system*", "platform_lifecycle*", "config*"]
 
+# The API's translations (.po + compiled .mo - `manage.py collect_ui_strings`).
+[tool.setuptools.package-data]
+platform_system = ["locale/**/*"]
+platform_lifecycle = ["locale/**/*"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

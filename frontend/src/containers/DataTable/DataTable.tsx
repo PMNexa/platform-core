@@ -5,6 +5,12 @@ import Alert from "../../components/molecules/Alert";
 import EmptyState from "../../components/organisms/EmptyState";
 import Pagination from "../../components/organisms/Pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../../components/organisms/Table";
+import { useT } from "../../i18n";
+import ColumnPicker from "./ColumnPicker";
+import messages from "./messages";
+import { sortDirectionForColumn } from "./lib/query";
+import type { DataTableColumn, DataTableConfig } from "./lib/types";
+import { useDataTable, type DataTableState } from "./lib/useDataTable";
 
 /** Every cell is capped at this many lines unless its column says otherwise (`clamp`). */
 export const DEFAULT_CLAMP_LINES = 2;
@@ -14,10 +20,6 @@ const CLAMP_TITLE_MIN = 40;
 function cellTitle(value: unknown): string | undefined {
   return typeof value === "string" && value.length > CLAMP_TITLE_MIN ? value : undefined;
 }
-import ColumnPicker from "./ColumnPicker";
-import { sortDirectionForColumn } from "./lib/query";
-import type { DataTableColumn, DataTableConfig } from "./lib/types";
-import { useDataTable, type DataTableState } from "./lib/useDataTable";
 
 /** A header's label; with a `hint`, dotted-underlined and explained on hover. */
 function headerWithHint<T>(column: DataTableColumn<T>) {
@@ -79,6 +81,7 @@ function DataTableWithOwnState<T>({ config, empty }: { config: DataTableConfig<T
 }
 
 function DataTableView<T>({ table, bare = false, empty }: { table: DataTableState<T>; bare?: boolean } & DataTableEmpty) {
+  const t = useT(messages);
   return (
     <div>
       {!bare && (
@@ -86,8 +89,8 @@ function DataTableView<T>({ table, bare = false, empty }: { table: DataTableStat
           {table.searchable && (
             <FormControl
               type="search"
-              aria-label="Search"
-              placeholder="Search…"
+              aria-label={t("search")}
+              placeholder={t("searchPlaceholder")}
               value={table.search}
               onChange={(event) => table.setSearch(event.target.value)}
               style={{ maxWidth: 240 }}
@@ -161,12 +164,12 @@ function DataTableView<T>({ table, bare = false, empty }: { table: DataTableStat
           own chrome instead of the toolbar above, so the same message
           still applies. */}
       {table.visibleColumns.length === 0 && (
-        <p className="text-secondary">All columns are hidden - use "Columns" to show at least one.</p>
+        <p className="text-secondary">{t("allHidden")}</p>
       )}
       {!table.loading &&
         !table.error &&
         table.visibleColumns.length > 0 &&
-        table.items.length === 0 && (empty ?? <EmptyState size="sm" title="No results." />)}
+        table.items.length === 0 && (empty ?? <EmptyState size="sm" title={t("noResults")} />)}
 
       {!bare && (
         <Pagination

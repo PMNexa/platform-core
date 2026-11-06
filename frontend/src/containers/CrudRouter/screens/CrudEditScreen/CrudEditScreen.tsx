@@ -9,7 +9,9 @@ import type { Schema } from "../../lib/schema";
 import type { FormLayout } from "../../lib/types";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
+import { useT } from "../../../../i18n";
 import CrudFormFields from "../CrudFormFields";
+import messages from "../../messages";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 export interface CrudEditScreenProps<T> {
@@ -95,6 +97,7 @@ interface CrudEditFormProps<T> extends Omit<CrudEditScreenProps<T>, "baseUrl" | 
  */
 function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, formLayout }: CrudEditFormProps<T>) {
   const baseFields = useMemo(() => createSchemaFields<T>(schema), [schema]);
+  const t = useT(messages);
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<T>();
   const { setValues } = form;
@@ -135,7 +138,7 @@ function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, f
   }
 
   async function handleDelete() {
-    if (!window.confirm("Delete this item?")) return;
+    if (!window.confirm(t("confirmDeleteItem"))) return;
     setDeleting(true);
     try {
       await baseApi.remove(id);
@@ -177,10 +180,10 @@ function CrudEditForm<T>({ baseApi, schema, request, id, onUpdated, onDeleted, f
         </CardBody>
         <CardFooter className="d-flex gap-2">
           <Button type="submit" variant="primary" disabled={form.submitting}>
-            {form.submitting ? "Saving…" : "Save"}
+            {form.submitting ? t("saving") : t("save")}
           </Button>
           <Button type="button" variant="danger" outline disabled={deleting} onClick={handleDelete}>
-            Delete
+            {t("delete")}
           </Button>
         </CardFooter>
       </Card>

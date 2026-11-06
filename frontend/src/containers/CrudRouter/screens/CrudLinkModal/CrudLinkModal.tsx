@@ -14,7 +14,9 @@ import type { Schema, SchemaField } from "../../lib/schema";
 import { loadSchema } from "../../lib/schemaCache";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
+import { useT } from "../../../../i18n";
 import CrudFormFields from "../CrudFormFields";
+import messages from "../../messages";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 type Row = Record<string, unknown>;
@@ -46,6 +48,7 @@ function CrudLinkModal(props: CrudLinkModalProps) {
 }
 
 function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, onClose }: CrudLinkModalProps) {
+  const t = useT(messages);
   const formId = useId();
   const [search, setSearch] = useState("");
   const [relatedSchema, setRelatedSchema] = useState<Schema | null>(null);
@@ -112,15 +115,15 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
   return (
     <Modal
       open
-      title={`Link ${relatedSchema?.label_plural ?? relation.label.toLowerCase()}`}
+      title={t("linkTitle", { plural: relatedSchema?.label_plural ?? relation.label.toLowerCase() })}
       onClose={onClose}
       footer={
         <>
           <Button type="button" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button type="submit" form={formId} variant="primary" disabled={selected.size === 0 || form.submitting}>
-            {form.submitting ? "Linking…" : selected.size > 0 ? `Link ${selected.size}` : "Link"}
+            {form.submitting ? t("linking") : selected.size > 0 ? t("linkCount", { n: selected.size }) : t("link")}
           </Button>
         </>
       }
@@ -129,8 +132,8 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
         {relatedSchema?.searchable && (
           <FormControl
             type="search"
-            aria-label="Search"
-            placeholder="Search…"
+            aria-label={t("search")}
+            placeholder={t("searchPlaceholder")}
             value={search}
             autoFocus
             onChange={(event) => setSearch(event.target.value)}
@@ -138,7 +141,7 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
           />
         )}
         {candidates === null && <Spinner />}
-        {candidates?.length === 0 && <p className="text-secondary mb-0">Nothing left to link.</p>}
+        {candidates?.length === 0 && <p className="text-secondary mb-0">{t("nothingToLink")}</p>}
         {candidates && candidates.length > 0 && (
           <div className="list-group list-group-flush overflow-auto mb-2" style={{ maxHeight: 280 }}>
             {candidates.map((row) => {
@@ -153,12 +156,11 @@ function CrudLinkModalBody({ relation, parentApi, parentId, request, onLinked, o
         )}
         {candidates && total > candidates.length && (
           <p className="text-secondary small">
-            Showing {candidates.length} of {total}
-            {relatedSchema?.searchable ? " - search to narrow it down." : "."}
+            {t("showingOf", { shown: candidates.length, total, searchable: Boolean(relatedSchema?.searchable) })}
           </p>
         )}
         {throughFields.length > 0 && (
-          <Fieldset legend="Link details" className="mt-3 mb-0">
+          <Fieldset legend={t("linkDetails")} className="mt-3 mb-0">
             <CrudFormFields fields={throughFields} values={form.values} onChange={form.setValue} errors={fieldErrorsOf(form.error)} />
           </Fieldset>
         )}
