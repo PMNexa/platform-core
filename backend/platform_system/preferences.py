@@ -18,6 +18,7 @@ from django.conf import settings
 from django.core import signing
 from django.dispatch import Signal
 
+from core_api.i18n import tr
 from core_api.system import ACCOUNT_MAIL, email_categories, email_category, get_setting, public_url
 
 from platform_system.models import EmailPreference
@@ -43,7 +44,7 @@ def is_enabled(user_id, category: str) -> bool:
 def preferences(user_id) -> list[dict]:
     saved = dict(EmailPreference.objects.filter(user_id=str(user_id)).values_list("category", "enabled"))
     return [
-        {"key": c.key, "label": c.label, "help": c.help, "enabled": saved.get(c.key, c.default)}
+        {"key": c.key, "label": tr(c.label), "help": tr(c.help), "enabled": saved.get(c.key, c.default)}
         for c in email_categories()
     ]
 

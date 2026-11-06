@@ -7,6 +7,7 @@ from datetime import timedelta
 from django.db.models import Count, F, Q
 from django.utils import timezone
 
+from core_api.i18n import tr, tr_texts
 from core_api.system import usage_providers
 
 from platform_system.models import (
@@ -75,8 +76,8 @@ def status() -> dict:
     usage = []
     for provider in usage_providers():
         try:
-            usage.append({"group": provider.group, "rows": provider.rows()})
+            usage.append({"group": tr(provider.group), "rows": tr_texts(provider.rows())})
         except Exception:
             logger.exception("Usage provider %s failed", provider.group)
-            usage.append({"group": provider.group, "rows": [{"label": "Error", "value": "couldn't compute"}]})
+            usage.append({"group": tr(provider.group), "rows": [{"label": tr("Error"), "value": tr("couldn't compute")}]})
     return {"jobs": jobs, "emails_24h": emails, "notifications_24h": notifications, "usage": usage}

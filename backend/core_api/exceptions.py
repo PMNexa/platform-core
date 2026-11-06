@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_default_exception_handler
 
 from core_api.errors import ApiError
+from core_api.i18n import tr
 from core_api.system import count
 
 _STATUS_CODE_TO_GENERIC_CODE = {
@@ -32,18 +33,32 @@ def _flatten_drf_validation_error(exc: drf_exceptions.ValidationError) -> dict[s
     detail = exc.detail
     if isinstance(detail, dict):
         for field, messages in detail.items():
-            field_errors[str(field)] = [str(m) for m in messages] if isinstance(messages, list) else [str(messages)]
+            field_errors[str(field)] = [tr(m) for m in messages] if isinstance(messages, list) else [tr(messages)]
     elif isinstance(detail, list):
-        field_errors["__root__"] = [str(m) for m in detail]
+        field_errors["__root__"] = [tr(m) for m in detail]
     else:
-        field_errors["__root__"] = [str(detail)]
+        field_errors["__root__"] = [tr(detail)]
     return field_errors
+
+
+def _translated_field_errors(field_errors):
+    """An `ApiError`'s `{field: [message, ...]}` with each plain-string
+    message in the request's language (see core_api/i18n.py)."""
+    if not isinstance(field_errors, dict):
+        return field_errors
+    return {
+        field: [tr(m) if isinstance(m, str) else m for m in messages] if isinstance(messages, list)
+        else tr(messages) if isinstance(messages, str) else messages
+        for field, messages in field_errors.items()
+    }
 
 
 def platform_exception_handler(exc, context):
     if isinstance(exc, ApiError):
         return Response(
-            {"code": exc.code, "message": exc.message, "field_errors": exc.field_errors},
+            # Messages are written in English; `tr` answers them in the
+            # request's language when a translation exists (core_api/i18n.py).
+            {"code": exc.code, "message": tr(exc.message), "field_errors": _translated_field_errors(exc.field_errors)},
             status=exc.status_code,
         )
 
@@ -59,13 +74,13 @@ def platform_exception_handler(exc, context):
     if isinstance(exc, drf_exceptions.ValidationError):
         response.data = {
             "code": "validation_error",
-            "message": "Request failed validation.",
+            "message": tr("Request failed validation."),
             "field_errors": _flatten_drf_validation_error(exc),
         }
         return response
 
     detail = getattr(exc, "detail", None)
-    message = str(detail) if detail is not None and not isinstance(detail, (list, dict)) else "Request failed."
+    message = tr(detail) if detail is not None and not isinstance(detail, (list, dict)) else tr("Request failed.")
     response.data = {
         "code": _STATUS_CODE_TO_GENERIC_CODE.get(response.status_code, "http_error"),
         "message": message,
