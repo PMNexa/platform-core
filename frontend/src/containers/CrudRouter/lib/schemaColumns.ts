@@ -1,3 +1,4 @@
+import type { Locale } from "../../../i18n";
 import type { DataTableColumn } from "../../DataTable";
 import { countLabel, formatFieldValue } from "./format";
 import { rowLabel } from "./relationOptions";
@@ -47,11 +48,13 @@ function relationValue(value: unknown, displayField?: string, bareLabel?: string
  * related endpoint to its schema's `display_field` (see
  * `useRelatedDisplayFields`); a bare cross-module id shows its label from
  * `bareLabels` (`useBareRelationLabels`); until either loads, the cell shows the id.
+ * `locale` formats dates and booleans (default: the current UI language).
  */
 export function createSchemaColumns<T>(
   schema: Schema,
   displayFields: Record<string, string | undefined> = {},
   bareLabels: Record<string, string> = {},
+  locale?: Locale,
 ): DataTableColumn<T>[] {
   return schema.fields.filter(isDisplayable).map(
     (field): DataTableColumn<T> => ({
@@ -72,8 +75,8 @@ export function createSchemaColumns<T>(
           );
         // A list's content (a script's passages, a quiz's questions) is a
         // page of its own - a row shows how many.
-        if (field.type === "list") return Array.isArray(value) ? countLabel(value.length) : "—";
-        return formatFieldValue(field, value);
+        if (field.type === "list") return Array.isArray(value) ? countLabel(value.length, locale) : "—";
+        return formatFieldValue(field, value, locale);
       },
     }),
   );

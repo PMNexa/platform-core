@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Button from "../Button";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export interface CopyButtonProps {
   /** What goes on the clipboard. */
@@ -10,7 +12,8 @@ export interface CopyButtonProps {
 }
 
 /** An outline `Button` that copies `text` to the clipboard and confirms it. */
-function CopyButton({ text, label = "Copy", className }: CopyButtonProps) {
+function CopyButton({ text, label, className }: CopyButtonProps) {
+  const t = useT(messages);
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
@@ -24,7 +27,7 @@ function CopyButton({ text, label = "Copy", className }: CopyButtonProps) {
       className={className}
       onClick={() => void navigator.clipboard.writeText(text).then(() => setCopied(true))}
     >
-      {copied ? "Copied" : label}
+      {copied ? t("copied") : (label ?? t("copy"))}
     </Button>
   );
 }

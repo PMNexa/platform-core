@@ -8,6 +8,8 @@ import { filterableFields, isComplete, needsValue, newCondition, operatorsFor, t
 import { fetchRelationOptions } from "../../lib/relationOptions";
 import type { Schema, SchemaField } from "../../lib/schema";
 import type { CrudFieldOption } from "../../lib/types";
+import { useLocale, useT } from "../../../../i18n";
+import messages from "../../messages";
 
 export interface CrudFilterModalProps {
   schema: Schema;
@@ -28,12 +30,13 @@ interface ValueInputProps {
 
 /** The value input for one condition, shaped by the field's type. */
 function ValueInput({ field, condition, options, onChange }: ValueInputProps) {
-  const label = `${field.label} value`;
+  const t = useT(messages);
+  const label = t("filterValue", { label: field.label });
   if (field.type === "boolean") {
     return (
       <select className="form-select form-select-sm" aria-label={label} value={condition.value} onChange={(event) => onChange(event.target.value)}>
-        <option value="true">Yes</option>
-        <option value="false">No</option>
+        <option value="true">{t("yes")}</option>
+        <option value="false">{t("no")}</option>
       </select>
     );
   }
@@ -50,7 +53,7 @@ function ValueInput({ field, condition, options, onChange }: ValueInputProps) {
         }}
       >
         <option value="" disabled>
-          {options || field.choices ? "Select…" : "Loading…"}
+          {options || field.choices ? t("select") : t("loading")}
         </option>
         {choices.map((choice) => (
           <option key={choice.value} value={choice.value}>
@@ -78,6 +81,8 @@ function ValueInput({ field, condition, options, onChange }: ValueInputProps) {
  * list until Apply; a condition still missing its value is dropped then.
  */
 function CrudFilterModal({ schema, request, conditions, onApply, onClose }: CrudFilterModalProps) {
+  const t = useT(messages);
+  const locale = useLocale();
   const [draft, setDraft] = useState<FilterCondition[]>(conditions);
   const [optionsByEndpoint, setOptionsByEndpoint] = useState<Record<string, CrudFieldOption[]>>({});
   const fields = useMemo(() => filterableFields(schema), [schema]);
@@ -115,24 +120,24 @@ function CrudFilterModal({ schema, request, conditions, onApply, onClose }: Crud
   return (
     <Modal
       open
-      title="Filter"
+      title={t("filter")}
       size="lg"
       onClose={onClose}
       footer={
         <>
           <Button type="button" variant="link" className="me-auto" disabled={draft.length === 0} onClick={() => setDraft([])}>
-            Clear all
+            {t("clearAll")}
           </Button>
           <Button type="button" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button type="button" variant="primary" onClick={() => onApply(draft.filter(isComplete))}>
-            Apply
+            {t("apply")}
           </Button>
         </>
       }
     >
-      {draft.length === 0 && <p className="text-secondary">No filters yet - add one to narrow the list.</p>}
+      {draft.length === 0 && <p className="text-secondary">{t("noFilters")}</p>}
       {draft.map((condition, index) => {
         const field = byName.get(condition.field);
         if (!field) return null;
@@ -144,11 +149,11 @@ function CrudFilterModal({ schema, request, conditions, onApply, onClose }: Crud
             <div className="col-3">
               <select
                 className="form-select form-select-sm"
-                aria-label={`${field.label} operator`}
+                aria-label={t("filterOperator", { label: field.label })}
                 value={condition.op}
                 onChange={(event) => update(index, { op: event.target.value as FilterOperator })}
               >
-                {operatorsFor(field).map((option) => (
+                {operatorsFor(field, locale).map((option) => (
                   <option key={option.op} value={option.op}>
                     {option.label}
                   </option>
@@ -170,7 +175,7 @@ function CrudFilterModal({ schema, request, conditions, onApply, onClose }: Crud
                 type="button"
                 icon
                 className="btn-ghost-secondary"
-                aria-label={`Remove ${field.label} filter`}
+                aria-label={t("removeFieldFilter", { label: field.label })}
                 onClick={() => setDraft((prev) => prev.filter((_, i) => i !== index))}
               >
                 <Icon name="x" />
@@ -181,13 +186,13 @@ function CrudFilterModal({ schema, request, conditions, onApply, onClose }: Crud
       })}
       <select
         className="form-select form-select-sm mt-3"
-        aria-label="Add filter"
+        aria-label={t("addFilter")}
         value=""
         onChange={(event) => addField(event.target.value)}
         style={{ maxWidth: 240 }}
       >
         <option value="" disabled>
-          + Add filter…
+          {t("addFilterOption")}
         </option>
         {fields.map((field) => (
           <option key={field.name} value={field.name}>

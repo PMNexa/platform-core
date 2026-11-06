@@ -1,5 +1,7 @@
 import UserMenu from "../../molecules/UserMenu";
 import type { AppShellUser, LinkComponent, UserMenuEntry } from "../../types";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export interface HeaderProps {
   user?: AppShellUser | null;
@@ -53,6 +55,7 @@ function SidebarIcon() {
  * entries, then "Log out". With no user, a bare "Log out" button.
  */
 function Header({ user, onLogout, userMenu, onUserMenuOpen, linkComponent, onToggleSidebar, sidebarFolded = false, desktopOnly = false }: HeaderProps) {
+  const t = useT(messages);
   return (
     <header className={`navbar d-print-none sticky-top bg-white${desktopOnly ? " d-none d-lg-flex" : ""}`}>
       <div className="container-fluid">
@@ -61,9 +64,9 @@ function Header({ user, onLogout, userMenu, onUserMenuOpen, linkComponent, onTog
             type="button"
             className="btn btn-ghost-secondary btn-icon btn-sm d-none d-lg-inline-flex"
             onClick={onToggleSidebar}
-            aria-label={sidebarFolded ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={sidebarFolded ? t("expandSidebar") : t("collapseSidebar")}
             aria-expanded={!sidebarFolded}
-            title={sidebarFolded ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarFolded ? t("expandSidebar") : t("collapseSidebar")}
           >
             <SidebarIcon />
           </button>

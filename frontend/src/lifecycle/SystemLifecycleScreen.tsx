@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, CardHeader, CardTitle, Modal } from "../components";
+import { formatNumber, useLocale, useT, type Locale, type Translate } from "../i18n";
 import { lifecycleApi, type LifecycleOverview, type LifecyclePreview, type LifecycleStepNumbers } from "./api";
+import messages from "./messages";
+
+type T = Translate<(typeof messages)["en"]>;
 
 export interface SystemLifecycleScreenProps {
   accessToken: string;
@@ -14,23 +18,23 @@ function rate(part: number, whole: number): number | null {
   return whole > 0 ? part / whole : null;
 }
 
-function percent(value: number | null): string {
-  return value === null ? "—" : `${Math.round(value * 100)}%`;
+function percent(value: number | null, locale: Locale): string {
+  return value === null ? "—" : formatNumber(value, { style: "percent", maximumFractionDigits: 0 }, locale);
 }
 
-function when(hours: number): string {
-  if (hours === 0) return "At once";
-  if (hours < 48) return `+${hours}h`;
-  return `+${Math.round(hours / 24)} days`;
+function when(hours: number, t: T): string {
+  if (hours === 0) return t("atOnce");
+  if (hours < 48) return t("afterHours", { n: hours });
+  return t("afterDays", { n: Math.round(hours / 24) });
 }
 
 /** Converted share vs. the holdout's, in percentage points - the step's effect. */
-function lift(step: LifecycleStepNumbers): string {
+function lift(step: LifecycleStepNumbers, t: T): string {
   const sent = rate(step.converted, step.sent);
   const held = rate(step.holdout_converted, step.holdout);
   if (sent === null || held === null) return "—";
   const points = Math.round((sent - held) * 100);
-  return `${points > 0 ? "+" : ""}${points} pts`;
+  return t("points", { points: `${points > 0 ? "+" : ""}${points}` });
 }
 
 interface Picked {
@@ -48,6 +52,8 @@ interface Picked {
  * data and sent to yourself.
  */
 function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLifecycleScreenProps) {
+  const t = useT(messages);
+  const locale = useLocale();
   const api = useMemo(() => lifecycleApi(accessToken), [accessToken]);
   const [days, setDays] = useState<number>(30);
   const [data, setData] = useState<LifecycleOverview | null>(null);
@@ -66,27 +72,26 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
   }, [api, days]);
 
   if (error && !data) return <Alert variant="danger">{error}</Alert>;
-  if (!data) return <div className="text-secondary">Loading…</div>;
+  if (!data) return <div className="text-secondary">{t("loading")}</div>;
   const base = `/${basePath.replace(/^\/+|\/+$/g, "")}`;
 
   return (
     <div className="row g-3">
       <div className="col-12 d-flex flex-wrap align-items-center gap-2">
         <div className="text-secondary small me-auto">
-          Each step's target action within 72 hours counts as converted. The holdout gets nothing and is measured the
-          same way, so <strong>lift</strong> is what the email added.
+          {t.rich("intro", {})}
         </div>
-        <div className="btn-group" role="group" aria-label="Range">
+        <div className="btn-group" role="group" aria-label={t("range")}>
           {RANGES.map((range) => (
             <Button key={range} size="sm" variant="secondary" outline={days !== range} onClick={() => setDays(range)}>
-              {range} days
+              {t("days", { n: range })}
             </Button>
           ))}
         </div>
       </div>
       {data.problems.length > 0 && (
         <div className="col-12">
-          <Alert variant="warning" title="Nothing is being sent" className="mb-0">
+          <Alert variant="warning" title={t("nothingSent")} className="mb-0">
             <ul className="mb-0">
               {data.problems.map((problem) => (
                 <li key={problem}>{problem}</li>
@@ -107,11 +112,19 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
               </div>
               <div className="card-actions small text-secondary text-end">
                 <div>
-                  {journey.enrollments.active_now ?? 0} in it now · {(journey.enrollments.active ?? 0) +
-                    (journey.enrollments.done ?? 0) + (journey.enrollments.exited ?? 0)} entered in {data.days} days
+                  {t("enrolled", {
+                    now: journey.enrollments.active_now ?? 0,
+                    entered:
+                      (journey.enrollments.active ?? 0) + (journey.enrollments.done ?? 0) + (journey.enrollments.exited ?? 0),
+                    days: data.days,
+                  })}
                 </div>
                 <div>
-                  Starts {journey.trigger ? <>on <code>{journey.trigger}</code></> : journey.scan ? "from a scan" : "—"}
+                  {journey.trigger
+                    ? t.rich("startsOn", { trigger: <code>{journey.trigger}</code> })
+                    : journey.scan
+                      ? t("startsFromScan")
+                      : t("startsNone")}
                 </div>
               </div>
             </CardHeader>
@@ -119,14 +132,14 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
               <table className="table table-vcenter card-table">
                 <thead>
                   <tr>
-                    <th>Step</th>
-                    <th>When</th>
-                    <th className="text-end">Sent</th>
-                    <th className="text-end">Clicked</th>
-                    <th className="text-end">Converted</th>
-                    <th className="text-end">Holdout conv.</th>
-                    <th className="text-end">Lift</th>
-                    <th className="text-end">Unsubscribed</th>
+                    <th>{t("colStep")}</th>
+                    <th>{t("colWhen")}</th>
+                    <th className="text-end">{t("colSent")}</th>
+                    <th className="text-end">{t("colClicked")}</th>
+                    <th className="text-end">{t("colConverted")}</th>
+                    <th className="text-end">{t("colHoldout")}</th>
+                    <th className="text-end">{t("colLift")}</th>
+                    <th className="text-end">{t("colUnsubscribed")}</th>
                     <th />
                   </tr>
                 </thead>
@@ -137,18 +150,18 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
                         {step.label}
                         <div className="small text-secondary">
                           <code>{step.key}</code>
-                          {step.target && <> → {step.target === "seen" ? "comes back" : <code>{step.target}</code>}</>}
+                          {step.target && <> → {step.target === "seen" ? t("comesBack") : <code>{step.target}</code>}</>}
                         </div>
                       </td>
-                      <td className="text-secondary">{when(step.delay_hours)}</td>
+                      <td className="text-secondary">{when(step.delay_hours, t)}</td>
                       <td className="text-end">{step.sent}</td>
-                      <td className="text-end">{percent(rate(step.clicked, step.sent))}</td>
-                      <td className="text-end">{percent(rate(step.converted, step.sent))}</td>
-                      <td className="text-end" title={`${step.holdout_converted} of ${step.holdout}`}>
-                        {percent(rate(step.holdout_converted, step.holdout))}
+                      <td className="text-end">{percent(rate(step.clicked, step.sent), locale)}</td>
+                      <td className="text-end">{percent(rate(step.converted, step.sent), locale)}</td>
+                      <td className="text-end" title={t("holdoutOf", { converted: step.holdout_converted, total: step.holdout })}>
+                        {percent(rate(step.holdout_converted, step.holdout), locale)}
                       </td>
-                      <td className="text-end fw-bold">{lift(step)}</td>
-                      <td className="text-end">{percent(rate(step.unsubscribed, step.sent))}</td>
+                      <td className="text-end fw-bold">{lift(step, t)}</td>
+                      <td className="text-end">{percent(rate(step.unsubscribed, step.sent), locale)}</td>
                       <td className="text-end">
                         <Button
                           size="sm"
@@ -156,7 +169,7 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
                           outline
                           onClick={() => setPicked({ journey: journey.key, step: step.key, label: `${journey.label}: ${step.label}` })}
                         >
-                          Preview
+                          {t("preview")}
                         </Button>
                       </td>
                     </tr>
@@ -168,9 +181,11 @@ function SystemLifecycleScreen({ accessToken, basePath = "/system" }: SystemLife
         </div>
       ))}
       <div className="col-12 small text-secondary">
-        Every message: <a href={`${base}/lifecycle-emails`}>lifecycle email log</a> · Addresses nothing goes to:{" "}
-        <a href={`${base}/email-suppressions`}>suppressed addresses</a> · Settings (cap, quiet hours, holdout):{" "}
-        <a href={`${base}/settings`}>System settings</a>
+        {t.rich("footer", {
+          log: <a href={`${base}/lifecycle-emails`}>{t("logLink")}</a>,
+          suppressed: <a href={`${base}/email-suppressions`}>{t("suppressedLink")}</a>,
+          settings: <a href={`${base}/settings`}>{t("settingsLink")}</a>,
+        })}
       </div>
       {picked && <PreviewModal api={api} picked={picked} onClose={() => setPicked(null)} />}
     </div>
@@ -186,6 +201,7 @@ function PreviewModal({
   picked: Picked;
   onClose: () => void;
 }) {
+  const t = useT(messages);
   const [userId, setUserId] = useState("");
   const [preview, setPreview] = useState<LifecyclePreview | null>(null);
   const [showText, setShowText] = useState(false);
@@ -211,8 +227,8 @@ function PreviewModal({
     setNotice(null);
     try {
       const result = await api.test(picked.journey, picked.step, userId.trim() || undefined);
-      if (result.status === "sent") setNotice(`Sent to ${result.to}.`);
-      else setError(`Not sent (${result.status}): ${result.error}`);
+      if (result.status === "sent") setNotice(t("sentTo", { to: result.to }));
+      else setError(t("notSent", { status: result.status, error: result.error }));
     } catch (thrown) {
       setError(thrown instanceof Error ? thrown.message : String(thrown));
     } finally {
@@ -235,10 +251,10 @@ function PreviewModal({
       footer={
         <>
           <Button variant="secondary" outline onClick={onClose}>
-            Close
+            {t("close")}
           </Button>
           <Button variant="primary" disabled={busy || !preview || preview.skipped} onClick={() => void sendTest()}>
-            Send a test to me
+            {t("sendTest")}
           </Button>
         </>
       }
@@ -252,29 +268,28 @@ function PreviewModal({
       >
         <input
           className="form-control form-control-sm"
-          placeholder="Render with a user's data - their id (empty: you)"
+          placeholder={t("userPlaceholder")}
           value={userId}
           onChange={(event) => setUserId(event.target.value)}
         />
         <Button type="submit" size="sm" variant="secondary" disabled={busy}>
-          Render
+          {t("render")}
         </Button>
       </form>
       {error && <Alert variant="danger">{error}</Alert>}
       {notice && <Alert variant="success">{notice}</Alert>}
       {!preview ? (
-        <div className="text-secondary">Loading…</div>
+        <div className="text-secondary">{t("loading")}</div>
       ) : preview.skipped ? (
         <Alert variant="info" className="mb-0">
-          Skipped for this user - the step's condition doesn't hold for them right now (e.g. they already did what it
-          asks).
+          {t("skipped")}
         </Alert>
       ) : (
         <>
           <div className="d-flex align-items-center mb-2">
             <div className="fw-bold me-auto">{preview.subject}</div>
             <Button size="sm" variant="link" onClick={() => setShowText((v) => !v)}>
-              {showText ? "HTML" : "Plain text"}
+              {showText ? t("html") : t("plainText")}
             </Button>
           </div>
           {showText ? (
@@ -283,7 +298,7 @@ function PreviewModal({
             </pre>
           ) : (
             <iframe
-              title="Email preview"
+              title={t("emailPreview")}
               sandbox=""
               srcDoc={preview.html}
               style={{ width: "100%", height: "26rem", border: "1px solid var(--tblr-border-color, #e6e7e9)", borderRadius: 4 }}

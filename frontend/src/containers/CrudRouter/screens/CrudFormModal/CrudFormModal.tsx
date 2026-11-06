@@ -8,7 +8,9 @@ import { pickFieldValues } from "../../lib/fields";
 import { useRelationFields } from "../../lib/relationOptions";
 import type { CrudField, FormLayout } from "../../lib/types";
 import { useCrudForm } from "../../lib/useCrudForm";
+import { useT } from "../../../../i18n";
 import CrudFormFields from "../CrudFormFields";
+import messages from "../../messages";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 type Row = Record<string, unknown>;
@@ -21,7 +23,7 @@ export interface CrudFormModalProps {
   request: BaseApiRequest;
   /** Loads the values to prefill - an edit. Omit for a blank create form. Called once per open. */
   load?: () => Promise<Row>;
-  /** @default "Save" */
+  /** @default "Save", in the UI language */
   submitLabel?: string;
   /** Gets exactly the `fields`' values (`pickFieldValues`). The modal closes once it resolves; a rejection is shown in the form instead. */
   onSubmit: (values: Row) => Promise<unknown>;
@@ -40,7 +42,8 @@ function CrudFormModal(props: CrudFormModalProps) {
   return props.open ? <CrudFormModalBody {...props} /> : null;
 }
 
-function CrudFormModalBody({ title, fields: baseFields, request, load, submitLabel = "Save", onSubmit, onClose, layout }: CrudFormModalProps) {
+function CrudFormModalBody({ title, fields: baseFields, request, load, submitLabel, onSubmit, onClose, layout }: CrudFormModalProps) {
+  const t = useT(messages);
   const formId = useId();
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<Row>();
@@ -87,10 +90,10 @@ function CrudFormModalBody({ title, fields: baseFields, request, load, submitLab
       footer={
         <>
           <Button type="button" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button type="submit" form={formId} variant="primary" disabled={loading || form.submitting}>
-            {form.submitting ? "Saving…" : submitLabel}
+            {form.submitting ? t("saving") : (submitLabel ?? t("save"))}
           </Button>
         </>
       }

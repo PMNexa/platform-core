@@ -72,6 +72,21 @@ export function localeFromRequest(request: Request): Locale {
   );
 }
 
+/**
+ * The language a react-router `meta` function should use: the host's
+ * root loader data (`{ locale }`, main's root.tsx) among `matches` - so a
+ * page title is right in the server render too. Falls back to `getLocale()`.
+ */
+export function localeFromMatches(matches: readonly unknown[] | undefined): Locale {
+  for (const match of matches ?? []) {
+    // react-router 8 calls it `loaderData`; 7 had `data`.
+    const m = match as { loaderData?: { locale?: unknown }; data?: { locale?: unknown } } | undefined;
+    const data = m?.loaderData ?? m?.data;
+    if (isLocale(data?.locale)) return data.locale;
+  }
+  return getLocale();
+}
+
 let current: Locale | null = null;
 const subscribers = new Set<() => void>();
 

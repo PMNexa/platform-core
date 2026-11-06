@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export type DrawerPlacement = "start" | "end";
 
@@ -28,6 +30,7 @@ export interface DrawerProps {
  * while `body.modal-open` is set, the drawer ignores the key.
  */
 function Drawer({ open, title, onClose, children, placement = "end", width = "40rem" }: DrawerProps) {
+  const t = useT(messages);
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -74,7 +77,7 @@ function Drawer({ open, title, onClose, children, placement = "end", width = "40
           <h2 className="offcanvas-title" id={titleId}>
             {title}
           </h2>
-          <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
+          <button type="button" className="btn-close" aria-label={t("close")} onClick={onClose} />
         </div>
         <div className="offcanvas-body">{children}</div>
       </div>

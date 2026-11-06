@@ -10,6 +10,7 @@ export {
   LOCALES,
   localeFromAcceptLanguage,
   localeFromCookie,
+  localeFromMatches,
   localeFromRequest,
   matchLocale,
   setLocale,

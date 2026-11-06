@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export type ModalSize = "sm" | "md" | "lg";
 
@@ -29,6 +31,7 @@ export interface ModalProps {
  * it) on close. No full focus trap yet.
  */
 function Modal({ open, title, onClose, children, footer, size = "md" }: ModalProps) {
+  const t = useT(messages);
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -86,7 +89,7 @@ function Modal({ open, title, onClose, children, footer, size = "md" }: ModalPro
               <h5 className="modal-title" id={titleId}>
                 {title}
               </h5>
-              <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
+              <button type="button" className="btn-close" aria-label={t("close")} onClick={onClose} />
             </div>
             <div className="modal-body">{children}</div>
             {footer && <div className="modal-footer">{footer}</div>}

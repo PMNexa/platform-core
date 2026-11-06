@@ -3,6 +3,8 @@ import Header from "../../organisms/Header";
 import Sidebar from "../../organisms/Sidebar";
 import UserMenu from "../../molecules/UserMenu";
 import { DefaultLink, type AppShellUser, type LinkComponent, type NavEntry, type UserMenuEntry } from "../../types";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export interface DashboardLayoutProps {
   /** Links and collapsible groups (an entry with `children` - `NavGroup`); a group's open/closed state is remembered per browser. */
@@ -119,6 +121,7 @@ function DashboardLayout({
   sidebarWidth = "13rem",
   children,
 }: DashboardLayoutProps) {
+  const t = useT(messages);
   const [folded, toggleFolded] = useSidebarFolded(defaultSidebarFolded);
   const [closedGroups, toggleGroup] = useClosedGroups();
   return (
@@ -136,7 +139,7 @@ function DashboardLayout({
             <UserMenu user={user} items={userMenu} onLogout={onLogout} onOpen={onUserMenuOpen} linkComponent={linkComponent} />
           ) : onLogout ? (
             <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onLogout}>
-              Log out
+              {t("logOut")}
             </button>
           ) : undefined
         }

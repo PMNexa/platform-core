@@ -4,6 +4,8 @@ import Drawer from "../Drawer";
 import SidebarNavGroup from "../../molecules/SidebarNavGroup";
 import SidebarNavItem from "../../molecules/SidebarNavItem";
 import { isNavGroup, type LinkComponent, type NavEntry } from "../../types";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export interface SidebarProps {
   brand: ReactNode;
@@ -53,6 +55,7 @@ function isActive(currentPath: string, to: string): boolean {
  * `.navbar-vertical.navbar-expand-lg` rule (position: fixed) outranks it.
  */
 function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, closedGroups, onToggleGroup, mobileEnd }: SidebarProps) {
+  const t = useT(messages);
   // The path the drawer was opened on: navigating elsewhere closes it, no effect needed.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const drawerOpen = openOn === currentPath;
@@ -97,7 +100,7 @@ function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, 
           type="button"
           aria-controls="sidebar-drawer"
           aria-expanded={drawerOpen}
-          aria-label="Open navigation"
+          aria-label={t("openNavigation")}
           onClick={() => setDrawerOpen(true)}
         >
           <span className="navbar-toggler-icon" />
@@ -128,7 +131,7 @@ function Sidebar({ brand, navItems, currentPath, linkComponent, folded = false, 
         <style href="platform-core-sidebar-drawer" precedence="default">
           {SIDEBAR_DRAWER_STYLES}
         </style>
-        <nav id="sidebar-drawer" className="pc-sidebar-drawer navbar p-0" aria-label="Main">
+        <nav id="sidebar-drawer" className="pc-sidebar-drawer navbar p-0" aria-label={t("mainNav")}>
           <ul className="navbar-nav w-100">{renderNav(false)}</ul>
         </nav>
       </Drawer>

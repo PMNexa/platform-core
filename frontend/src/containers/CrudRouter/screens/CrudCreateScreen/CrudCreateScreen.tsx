@@ -9,7 +9,9 @@ import type { Schema } from "../../lib/schema";
 import type { FormLayout } from "../../lib/types";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
+import { useT } from "../../../../i18n";
 import CrudFormFields from "../CrudFormFields";
+import messages from "../../messages";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
 export interface CrudCreateScreenProps<T> {
@@ -95,6 +97,7 @@ interface CrudCreateFormProps<T> extends Omit<CrudCreateScreenProps<T>, "baseUrl
  */
 function CrudCreateForm<T>({ baseApi, schema, request, onCreated, formLayout }: CrudCreateFormProps<T>) {
   const baseFields = useMemo(() => createSchemaFields<T>(schema), [schema]);
+  const t = useT(messages);
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<T>();
 
@@ -117,7 +120,7 @@ function CrudCreateForm<T>({ baseApi, schema, request, onCreated, formLayout }: 
         </CardBody>
         <CardFooter>
           <Button type="submit" variant="primary" disabled={form.submitting}>
-            {form.submitting ? "Saving…" : "Create"}
+            {form.submitting ? t("saving") : t("create")}
           </Button>
         </CardFooter>
       </Card>

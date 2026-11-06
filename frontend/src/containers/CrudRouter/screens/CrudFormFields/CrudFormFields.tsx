@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 import { fieldWidget, type FieldWidgetProps } from "../../lib/fieldWidgets";
 import { layoutSections, matches, type LaidOutField } from "../../lib/formLayout";
 import type { CrudField, FormLayout } from "../../lib/types";
+import { useT } from "../../../../i18n";
+import messages from "../../messages";
 
 /** An emptied optional input: `null` clears a nullable field; `undefined` drops the key from the JSON payload so the server's default applies. */
 function emptyValue<T>(field: CrudField<T>): null | undefined {
@@ -51,6 +53,7 @@ export interface CrudFormFieldsProps<T> {
  * `CrudField.nullable`).
  */
 function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFormFieldsProps<T>) {
+  const t = useT(messages);
   function renderField(field: CrudField<T>) {
     if (field.type === "checkbox") {
       return (
@@ -96,7 +99,7 @@ function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFor
             {/* Re-selectable only where it can be cleared - an optional select (e.g. an optional parent/relation) needs this as a real choice, not just an unpicked placeholder, so a caller can clear a previous selection back to "none". */}
             {!hasBlank && (
               <option value="" disabled={!canClear}>
-                {canClear ? "None" : "Select…"}
+                {canClear ? t("none") : t("select")}
               </option>
             )}
             {field.options?.map((option) => (
@@ -154,7 +157,7 @@ function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFor
               onChange(field.key, (file ?? (stored ? current : emptyValue(field))) as T[typeof field.key]);
             }}
           />
-          {stored && !picked && <small className="form-hint">Current file: {stored}. Choose another to replace it.</small>}
+          {stored && !picked && <small className="form-hint">{t("currentFile", { name: stored })}</small>}
           <Hint text={field.helpText} />
           <FieldError messages={errors?.[field.key]} />
         </div>
@@ -249,7 +252,7 @@ function CrudFormFields<T>({ fields, values, onChange, errors, layout }: CrudFor
           const refused = shown.some(({ field }) => errors?.[field.key]?.length);
           return (
             <details key={key} className="gn-form-section mb-3" open={refused || undefined}>
-              <summary className="subheader mb-2" style={{ cursor: "pointer" }}>{section.title ?? "More"}</summary>
+              <summary className="subheader mb-2" style={{ cursor: "pointer" }}>{section.title ?? t("more")}</summary>
               {content}
             </details>
           );

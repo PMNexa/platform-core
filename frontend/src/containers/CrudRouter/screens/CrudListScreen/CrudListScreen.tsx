@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, CardFooter, CardHeader, DefaultLink, EmptyState, FormControl, Icon, Pagination, Spinner } from "../../../../components";
 import type { LinkComponent } from "../../../../components";
+import { useLocale, useT } from "../../../../i18n";
 import { ColumnPicker, DataTable, useDataTable } from "../../../DataTable";
 import { usePersistedState } from "../../../DataTable/lib/persist";
 import type { DataTableColumn } from "../../../DataTable";
@@ -13,6 +14,7 @@ import { createRequest } from "../../lib/request";
 import { canDo, type Schema } from "../../lib/schema";
 import { createSchemaColumns, toOneRelationFields, withRelationIncludes } from "../../lib/schemaColumns";
 import CrudFilterModal from "../CrudFilterModal";
+import messages from "../../messages";
 
 export interface CrudListScreenProps<T> {
   /** The resource's own base URL, e.g. `"/api/v1/goals"` - the only resource-shaped input this screen needs; `createBaseApi`/`createRequest` (see their own docstrings) build the actual client internally from this plus `accessToken`. */
@@ -176,6 +178,8 @@ interface CrudListScreenTableProps<T> extends Omit<CrudListScreenProps<T>, "base
  * costs little, in exchange for Delete definitely still working.
  */
 function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkComponent, searchable, onDeleted }: CrudListScreenTableProps<T>) {
+  const t = useT(messages);
+  const locale = useLocale();
   const Link = linkComponent ?? DefaultLink;
   const resource = baseApi.endpoint.split("/").filter(Boolean).pop() ?? baseApi.endpoint;
   const paths = createCrudPaths(basePath ?? resource);
@@ -191,10 +195,13 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
   const relationFields = useMemo(() => toOneRelationFields(schema), [schema]);
   const displayFields = useRelatedDisplayFields(relationFields, request);
   const [bareLabels, setLabelledRows] = useBareRelationLabels(relationFields, request);
-  const schemaColumns = useMemo(() => createSchemaColumns<T>(schema, displayFields, bareLabels), [schema, displayFields, bareLabels]);
+  const schemaColumns = useMemo(
+    () => createSchemaColumns<T>(schema, displayFields, bareLabels, locale),
+    [schema, displayFields, bareLabels, locale],
+  );
 
   async function handleDelete(row: T) {
-    if (!window.confirm("Delete this item?")) return;
+    if (!window.confirm(t("confirmDeleteItem"))) return;
     const id = rowKey(row);
     setDeletingId(id);
     try {
@@ -235,11 +242,11 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
         const name = rowLabel(row as Record<string, unknown>, schema.display_field);
         return (
           <div className="d-flex gap-1 justify-content-end text-nowrap">
-            <Link to={paths.detailPath(id)} className="btn btn-ghost-secondary btn-icon btn-sm" aria-label={`View ${name}`}>
+            <Link to={paths.detailPath(id)} className="btn btn-ghost-secondary btn-icon btn-sm" aria-label={t("viewName", { name })}>
               <Icon name="eye" />
             </Link>
             {canDo(schema, "update") && (
-              <Link to={paths.editPath(id)} className="btn btn-ghost-secondary btn-icon btn-sm" aria-label={`Edit ${name}`}>
+              <Link to={paths.editPath(id)} className="btn btn-ghost-secondary btn-icon btn-sm" aria-label={t("editName", { name })}>
                 <Icon name="pencil" />
               </Link>
             )}
@@ -248,8 +255,8 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
                 type="button"
                 icon
                 className="btn-ghost-danger"
-                aria-label={`Delete ${name}`}
-                title="Delete"
+                aria-label={t("deleteName", { name })}
+                title={t("delete")}
                 disabled={deletingId === id}
                 onClick={() => handleDelete(row)}
               >
@@ -288,13 +295,13 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
   // Where the rows would be when there are none: "nothing matches" (a
   // search or filter is on - offer to clear it) is a different message
   // from "nothing exists yet" (offer the New link).
-  const plural = schema.label_plural ?? "rows";
+  const plural = schema.label_plural ?? t("rows");
   const narrowed = table.search.trim() !== "" || conditions.length > 0;
   const emptyState = narrowed ? (
     <EmptyState
       size="sm"
-      title={`No ${plural} match.`}
-      description="Try another search, or clear the filters."
+      title={t("noneMatch", { plural })}
+      description={t("noneMatchHint")}
       action={
         <Button
           type="button"
@@ -305,19 +312,19 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
             applyFilters([]);
           }}
         >
-          Clear search and filters
+          {t("clearSearchAndFilters")}
         </Button>
       }
     />
   ) : (
     <EmptyState
       size="sm"
-      title={`No ${plural} yet.`}
+      title={t("noneYet", { plural })}
       action={
         canDo(schema, "create") ? (
           <Link to={paths.createPath} className="btn btn-primary btn-sm">
             <Icon name="plus" />
-            New{schema.label ? ` ${schema.label}` : ""}
+            {schema.label ? t("newLabel", { label: schema.label }) : t("newPlain")}
           </Link>
         ) : undefined
       }
@@ -330,15 +337,15 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
         {canDo(schema, "create") && (
           <Link to={paths.createPath} className="btn btn-primary btn-sm">
             <Icon name="plus" />
-            New{schema.label ? ` ${schema.label}` : ""}
+            {schema.label ? t("newLabel", { label: schema.label }) : t("newPlain")}
           </Link>
         )}
         <div className="d-flex align-items-center gap-2 ms-auto">
           {showSearch && (
             <FormControl
               type="search"
-              aria-label="Search"
-              placeholder="Search…"
+              aria-label={t("search")}
+              placeholder={t("searchPlaceholder")}
               value={table.search}
               onChange={(event) => table.setSearch(event.target.value)}
               style={{ maxWidth: 240 }}
@@ -346,7 +353,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
           )}
           <Button type="button" variant="secondary" outline className="flex-shrink-0 text-nowrap" onClick={() => setFiltering(true)}>
             <Icon name="filter" />
-            Filter
+            {t("filter")}
             {conditions.length > 0 && (
               <Badge color="primary" light={false} className="ms-1">
                 {conditions.length}
@@ -366,7 +373,7 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
           {conditions.map((condition, index) => {
             const field = fieldsByName.get(condition.field);
             if (!field) return null;
-            const text = describeCondition(field, condition);
+            const text = describeCondition(field, condition, locale);
             return (
               <Badge key={index} className="d-inline-flex align-items-center gap-1">
                 {text}
@@ -374,14 +381,14 @@ function CrudListScreenTable<T>({ baseApi, request, schema, basePath, linkCompon
                   type="button"
                   className="btn-close ms-1"
                   style={{ width: "0.5rem", height: "0.5rem" }}
-                  aria-label={`Remove filter ${text}`}
+                  aria-label={t("removeFilter", { text })}
                   onClick={() => applyFilters(conditions.filter((_, i) => i !== index))}
                 />
               </Badge>
             );
           })}
           <Button type="button" variant="link" className="p-0" onClick={() => applyFilters([])}>
-            Clear
+            {t("clear")}
           </Button>
         </div>
       )}

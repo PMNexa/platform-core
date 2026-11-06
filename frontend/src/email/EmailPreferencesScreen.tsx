@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Card, CardBody, CardHeader, CardTitle } from "../components";
 import { emailApi, type EmailCategoryChoice } from "./api";
 import EmailCategoryList from "./EmailCategoryList";
+import { useT } from "../i18n";
+import messages from "./messages";
 
 export interface EmailPreferencesScreenProps {
   accessToken: string;
@@ -17,6 +19,7 @@ function errorText(thrown: unknown): string {
  * (confirmation, password reset, security) isn't listed - it always goes.
  */
 function EmailPreferencesScreen({ accessToken }: EmailPreferencesScreenProps) {
+  const t = useT(messages);
   const api = useMemo(() => emailApi(accessToken), [accessToken]);
   const [categories, setCategories] = useState<EmailCategoryChoice[] | null>(null);
   const [saving, setSaving] = useState(false);
@@ -51,18 +54,15 @@ function EmailPreferencesScreen({ accessToken }: EmailPreferencesScreenProps) {
     <div className="container-narrow" style={{ maxWidth: "40rem" }}>
       <Card>
         <CardHeader>
-          <CardTitle>Email preferences</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
         </CardHeader>
         <CardBody>
-          <p className="text-secondary">
-            Choose what we email you about. Account emails - confirming your address, resetting your password,
-            security notices - are always sent.
-          </p>
+          <p className="text-secondary">{t("intro")}</p>
           {error && <Alert variant="danger">{error}</Alert>}
           {!categories ? (
-            !error && <div className="text-secondary">Loading…</div>
+            !error && <div className="text-secondary">{t("loading")}</div>
           ) : categories.length === 0 ? (
-            <div className="text-secondary">This instance sends account emails only.</div>
+            <div className="text-secondary">{t("accountOnly")}</div>
           ) : (
             <EmailCategoryList categories={categories} onToggle={(key, on) => void toggle(key, on)} disabled={saving} />
           )}

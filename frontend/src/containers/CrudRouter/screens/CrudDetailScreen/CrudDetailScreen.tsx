@@ -23,7 +23,9 @@ import { loadSchema } from "../../lib/schemaCache";
 import { createSchemaFields } from "../../lib/schemaFields";
 import { useCrudForm } from "../../lib/useCrudForm";
 import CrudFormFields from "../CrudFormFields";
+import { useLocale, useT } from "../../../../i18n";
 import CrudRelationSection from "../CrudRelationSection";
+import messages from "../../messages";
 import ListValue from "./ListValue";
 import { fieldErrorsOf, formErrorMessage } from "../../lib/requestError";
 
@@ -144,6 +146,7 @@ interface CrudDetailViewProps extends Omit<CrudDetailScreenProps, "baseUrl" | "a
  * media, the row's own scoping applies) and handed to the browser.
  */
 function FileValue({ name, download }: { name: string; download: () => Promise<Blob> }) {
+  const t = useT(messages);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function save() {
@@ -167,7 +170,7 @@ function FileValue({ name, download }: { name: string; download: () => Promise<B
     <span className="d-inline-flex align-items-center gap-2">
       {name}
       <Button type="button" variant="secondary" outline onClick={save} disabled={busy}>
-        {busy ? "Downloading…" : "Download"}
+        {busy ? t("downloading") : t("download")}
       </Button>
       {error && <span className="text-danger small">{error}</span>}
     </span>
@@ -185,6 +188,8 @@ function isShownDetail(field: SchemaField, displayField: string | undefined): bo
 }
 
 function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent, resourcePath = lastSegment, onDeleted, formLayout }: CrudDetailViewProps) {
+  const t = useT(messages);
+  const locale = useLocale();
   const Link = linkComponent ?? DefaultLink;
   const paths = createCrudPaths(basePath ?? lastSegment(baseApi.endpoint));
   const [record, setRecord] = useState<Row | null>(null);
@@ -220,7 +225,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
   const [counts, refreshCounts] = useRelationCounts(relations, id, request);
 
   async function handleDelete() {
-    if (!window.confirm(`Delete this ${schema.label ?? "item"}?`)) return;
+    if (!window.confirm(schema.label ? t("confirmDeleteLabel", { label: schema.label }) : t("confirmDeleteItem"))) return;
     setDeleting(true);
     try {
       await baseApi.remove(id);
@@ -260,14 +265,14 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
     if (field.choices?.length)
       return (
         <Badge color="blue" wrap>
-          {formatFieldValue(field, value)}
+          {formatFieldValue(field, value, locale)}
         </Badge>
       );
-    if (field.type === "boolean") return <Badge color={value ? "green" : "secondary"}>{formatFieldValue(field, value)}</Badge>;
+    if (field.type === "boolean") return <Badge color={value ? "green" : "secondary"}>{formatFieldValue(field, value, locale)}</Badge>;
     if (field.type === "list" && Array.isArray(value)) return <ListValue field={field} value={value} />;
     if (field.type === "file")
-      return <FileValue name={formatFieldValue(field, value)} download={() => baseApi.file(id, field.name)} />;
-    if (field.type !== "relation") return formatFieldValue(field, value);
+      return <FileValue name={formatFieldValue(field, value, locale)} download={() => baseApi.file(id, field.name)} />;
+    if (field.type !== "relation") return formatFieldValue(field, value, locale);
     const label = relationLabels[`${field.related_endpoint}/${value}`] ?? String(value);
     const mount = field.related_endpoint ? resourcePath(field.related_endpoint) : null;
     return mount == null ? label : <Link to={`${mount}/${value}`}>{label}</Link>;
@@ -303,13 +308,13 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
                 }}
               >
                 <Icon name="pencil" />
-                Edit
+                {t("edit")}
               </Button>
             )}
             {canDo(schema, "delete") && (
               <Button variant="danger" outline disabled={deleting} onClick={handleDelete}>
                 <Icon name="trash" />
-                Delete
+                {t("delete")}
               </Button>
             )}
           </div>
@@ -327,7 +332,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
                 className={`nav-link${active ? "" : " active"}`}
                 onClick={() => setActiveTab(DETAILS_TAB)}
               >
-                Details
+                {t("details")}
               </button>
             </li>
             {relations.map((relation) => {
@@ -385,7 +390,7 @@ function CrudDetailView({ baseApi, schema, request, id, basePath, linkComponent,
         ) : (
           <CardBody>
             {shownFields.length === 0 ? (
-              <p className="text-secondary mb-0">Nothing else to show.</p>
+              <p className="text-secondary mb-0">{t("nothingElse")}</p>
             ) : (
               <dl className="row g-3 mb-0">
                 {shownFields.map((field) => (
@@ -429,6 +434,7 @@ function DetailEditForm({
   onSaved: (row: Row) => void;
   onCancel: () => void;
 }) {
+  const t = useT(messages);
   const baseFields = useMemo(() => createSchemaFields<Row>(schema), [schema]);
   const fields = useRelationFields(baseFields, request);
   const form = useCrudForm<Row>(record);
@@ -451,10 +457,10 @@ function DetailEditForm({
       </CardBody>
       <CardFooter className="d-flex gap-2">
         <Button type="submit" variant="primary" disabled={form.submitting}>
-          {form.submitting ? "Saving…" : "Save"}
+          {form.submitting ? t("saving") : t("save")}
         </Button>
         <Button type="button" onClick={onCancel} disabled={form.submitting}>
-          Cancel
+          {t("cancel")}
         </Button>
       </CardFooter>
     </form>

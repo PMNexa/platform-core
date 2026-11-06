@@ -1,7 +1,9 @@
 import { useState } from "react";
 import Button from "../../../components/atoms/Button";
 import FormCheck from "../../../components/molecules/FormCheck";
+import { useT } from "../../../i18n";
 import type { DataTableColumn } from "../lib/types";
+import messages from "../messages";
 
 export interface ColumnPickerProps<T> {
   /** Already in display order - `DataTable` passes `orderedColumns`, not `visibleColumns`, so a hidden column still shows up here to be re-shown. */
@@ -22,6 +24,7 @@ export interface ColumnPickerProps<T> {
  * rule as everything in `components/`.
  */
 function ColumnPicker<T>({ columns, hiddenColumns, onToggleColumn, onMoveColumn, className }: ColumnPickerProps<T>) {
+  const t = useT(messages);
   const [open, setOpen] = useState(false);
   const classes = ["position-relative", className].filter(Boolean).join(" ");
 
@@ -33,7 +36,7 @@ function ColumnPicker<T>({ columns, hiddenColumns, onToggleColumn, onMoveColumn,
         outline
         icon
         aria-expanded={open}
-        aria-label="Columns"
+        aria-label={t("columns")}
         onClick={() => setOpen((current) => !current)}
       >
         <svg
@@ -67,7 +70,7 @@ function ColumnPicker<T>({ columns, hiddenColumns, onToggleColumn, onMoveColumn,
                     type="button"
                     icon
                     disabled={index === 0}
-                    aria-label={`Move ${column.key} up`}
+                    aria-label={t("moveUp", { name: column.key })}
                     onClick={() => onMoveColumn(column.key, -1)}
                   >
                     ↑
@@ -76,7 +79,7 @@ function ColumnPicker<T>({ columns, hiddenColumns, onToggleColumn, onMoveColumn,
                     type="button"
                     icon
                     disabled={index === columns.length - 1}
-                    aria-label={`Move ${column.key} down`}
+                    aria-label={t("moveDown", { name: column.key })}
                     onClick={() => onMoveColumn(column.key, 1)}
                   >
                     ↓

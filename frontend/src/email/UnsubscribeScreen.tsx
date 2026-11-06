@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, CardBody } from "../components";
 import { unsubscribeApi, type EmailCategoryChoice } from "./api";
 import EmailCategoryList from "./EmailCategoryList";
+import { useT } from "../i18n";
+import messages from "./messages";
 
 export interface UnsubscribeScreenProps {
   /** The token from the email's link. */
@@ -19,6 +21,7 @@ function errorText(thrown: unknown): string {
  * everything but account mail, and a switch per category.
  */
 function UnsubscribeScreen({ token }: UnsubscribeScreenProps) {
+  const t = useT(messages);
   const api = useMemo(() => unsubscribeApi(token), [token]);
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<EmailCategoryChoice[] | null>(null);
@@ -60,13 +63,13 @@ function UnsubscribeScreen({ token }: UnsubscribeScreenProps) {
   return (
     <div className="page page-center">
       <div className="container container-tight py-4">
-        <h1 className="h2 text-center mb-4">Email preferences</h1>
+        <h1 className="h2 text-center mb-4">{t("title")}</h1>
         <Card>
           <CardBody>
             {error && <Alert variant="danger">{error}</Alert>}
             {notice && <Alert variant="success">{notice}</Alert>}
             {!categories ? (
-              !error && <div className="text-secondary">Loading…</div>
+              !error && <div className="text-secondary">{t("loading")}</div>
             ) : (
               <>
                 {current && (
@@ -77,12 +80,12 @@ function UnsubscribeScreen({ token }: UnsubscribeScreenProps) {
                         size="md"
                         className="w-100"
                         disabled={saving}
-                        onClick={() => void save({ [current.key]: false }, `You won't get "${current.label}" emails any more.`)}
+                        onClick={() => void save({ [current.key]: false }, t("stopped", { label: current.label }))}
                       >
-                        Unsubscribe from "{current.label}"
+                        {t("unsubscribeFrom", { label: current.label })}
                       </Button>
                     ) : (
-                      <div className="text-secondary">You're unsubscribed from "{current.label}".</div>
+                      <div className="text-secondary">{t("unsubscribed", { label: current.label })}</div>
                     )}
                   </div>
                 )}
@@ -90,7 +93,7 @@ function UnsubscribeScreen({ token }: UnsubscribeScreenProps) {
                   categories={categories}
                   highlight={category}
                   disabled={saving}
-                  onToggle={(key, on) => void save({ [key]: on }, "Saved.")}
+                  onToggle={(key, on) => void save({ [key]: on }, t("saved"))}
                 />
                 <Button
                   variant="link"
@@ -99,18 +102,18 @@ function UnsubscribeScreen({ token }: UnsubscribeScreenProps) {
                   onClick={() =>
                     void save(
                       Object.fromEntries(categories.map((c) => [c.key, false])),
-                      "Unsubscribed from everything. You'll still get account emails (password resets and the like).",
+                      t("unsubscribedAll"),
                     )
                   }
                 >
-                  Unsubscribe from all
+                  {t("unsubscribeAll")}
                 </Button>
               </>
             )}
           </CardBody>
         </Card>
         <p className="text-center text-secondary small mt-3">
-          Account emails - confirming your address, password resets, security notices - are always sent.
+          {t("alwaysSent")}
         </p>
       </div>
     </div>

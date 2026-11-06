@@ -27,11 +27,13 @@ type Translation<E extends MessageMap> = { [K in keyof E]: E[K] extends string ?
 export type Catalog<E extends MessageMap> = { en: E } & Record<Exclude<Locale, "en">, Translation<E>>;
 
 type VarsOf<M> = M extends (vars: infer V) => unknown ? V : Vars | undefined;
+/** A string or a function of no vars: vars optional; otherwise the function's vars. */
+type ArgsOf<M> = M extends string ? [Vars?] : M extends () => unknown ? [Vars?] : [VarsOf<M>];
 
 export interface Translate<E extends MessageMap> {
-  <K extends keyof E & string>(key: K, ...vars: E[K] extends string ? [Vars?] : [VarsOf<E[K]>]): string;
+  <K extends keyof E & string>(key: K, ...vars: ArgsOf<E[K]>): string;
   /** Same, but keeps JSX a message function returns. */
-  rich<K extends keyof E & string>(key: K, ...vars: E[K] extends string ? [Vars?] : [VarsOf<E[K]>]): ReactNode;
+  rich<K extends keyof E & string>(key: K, ...vars: ArgsOf<E[K]>): ReactNode;
   locale: Locale;
 }
 
@@ -66,7 +68,7 @@ export function translator<E extends MessageMap>(catalog: Catalog<E>, locale: Lo
 export function translate<E extends MessageMap, K extends keyof E & string>(
   catalog: Catalog<E>,
   key: K,
-  ...vars: E[K] extends string ? [Vars?] : [VarsOf<E[K]>]
+  ...vars: ArgsOf<E[K]>
 ): string {
   return translator(catalog)(key, ...vars);
 }

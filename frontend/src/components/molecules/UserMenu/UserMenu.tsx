@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Avatar from "../../atoms/Avatar";
 import { DefaultLink, type AppShellUser, type LinkComponent, type UserMenuEntry } from "../../types";
+import { useT } from "../../../i18n";
+import messages from "../../messages";
 
 export interface UserMenuProps {
   user: AppShellUser;
@@ -32,6 +34,7 @@ function CheckIcon() {
  * `role`. Closes on an outside click, Escape, or picking an entry.
  */
 function UserMenu({ user, items = [], onLogout, onOpen, linkComponent: Link = DefaultLink }: UserMenuProps) {
+  const t = useT(messages);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -70,7 +73,7 @@ function UserMenu({ user, items = [], onLogout, onOpen, linkComponent: Link = De
         className="nav-link d-flex lh-1 p-0 px-2 border-0 bg-transparent text-reset dropdown-toggle"
         aria-expanded={open}
         aria-controls={menuId}
-        aria-label={`Account menu for ${user.name}`}
+        aria-label={t("accountMenu", { name: user.name })}
         onClick={toggle}
       >
         <Avatar name={user.name} />
@@ -139,7 +142,7 @@ function UserMenu({ user, items = [], onLogout, onOpen, linkComponent: Link = De
                   onLogout();
                 }}
               >
-                Log out
+                {t("logOut")}
               </button>
             </>
           )}

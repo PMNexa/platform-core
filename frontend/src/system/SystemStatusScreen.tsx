@@ -1,23 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, type BadgeColor, Card, CardBody, CardHeader, CardTitle } from "../components";
 import { systemApi, type SystemStatus } from "./api";
+import { formatDateTime, formatNumber, useLocale, useT } from "../i18n";
+import messages from "./messages";
 
 export interface SystemStatusScreenProps {
   accessToken: string;
 }
 
-const WHEN = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
-const STATE: Record<string, [BadgeColor, string]> = {
-  ok: ["green", "Running"],
-  failing: ["red", "Failing"],
-  stopped: ["yellow", "Not running"],
-};
+const WHEN: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" };
+const STATE = {
+  ok: ["green", "stateRunning"],
+  failing: ["red", "stateFailing"],
+  stopped: ["yellow", "stateStopped"],
+} as const satisfies Record<string, readonly [BadgeColor, string]>;
 
 function Stat({ label, value, tone }: { label: string; value: number | string; tone?: string }) {
+  const locale = useLocale();
   return (
     <div className="col-6 col-md-3">
       <div className="text-secondary small">{label}</div>
-      <div className={`h2 mb-0 ${tone ?? ""}`}>{value}</div>
+      <div className={`h2 mb-0 ${tone ?? ""}`}>{typeof value === "number" ? formatNumber(value, undefined, locale) : value}</div>
     </div>
   );
 }
@@ -32,6 +35,8 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
   const api = useMemo(() => systemApi(accessToken), [accessToken]);
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useT(messages);
+  const locale = useLocale();
 
   useEffect(() => {
     let cancelled = false;
@@ -49,20 +54,19 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
   }, [api]);
 
   if (error && !status) return <Alert variant="danger">{error}</Alert>;
-  if (!status) return <div className="text-secondary">Loading…</div>;
+  if (!status) return <div className="text-secondary">{t("loading")}</div>;
 
   return (
     <div className="row g-3">
       <div className="col-12">
         <Card>
           <CardHeader>
-            <CardTitle>Background jobs</CardTitle>
+            <CardTitle>{t("backgroundJobs")}</CardTitle>
           </CardHeader>
           {status.jobs.length === 0 ? (
             <CardBody>
               <Alert variant="warning" className="mb-0">
-                No background job has ever reported in - scheduled work (the app's jobs, digests, email retries) isn't
-                running. Start the app's scheduler service.
+                {t("noJobs")}
               </Alert>
             </CardBody>
           ) : (
@@ -70,12 +74,12 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
               <table className="table table-vcenter card-table">
                 <thead>
                   <tr>
-                    <th>Job</th>
-                    <th>State</th>
-                    <th>Last run</th>
-                    <th>Last success</th>
-                    <th>Runs / failures</th>
-                    <th>Last result</th>
+                    <th>{t("colJob")}</th>
+                    <th>{t("colState")}</th>
+                    <th>{t("colLastRun")}</th>
+                    <th>{t("colLastSuccess")}</th>
+                    <th>{t("colRunsFailures")}</th>
+                    <th>{t("colLastResult")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -83,11 +87,11 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
                     <tr key={job.name}>
                       <td className="font-monospace">{job.name}</td>
                       <td>
-                        <Badge color={STATE[job.state][0]}>{STATE[job.state][1]}</Badge>
+                        <Badge color={STATE[job.state][0]}>{t(STATE[job.state][1])}</Badge>
                         {job.last_error && <div className="small text-danger mt-1">{job.last_error}</div>}
                       </td>
-                      <td>{WHEN.format(new Date(job.last_run_at))}</td>
-                      <td>{job.last_ok_at ? WHEN.format(new Date(job.last_ok_at)) : "—"}</td>
+                      <td>{formatDateTime(job.last_run_at, WHEN, locale)}</td>
+                      <td>{job.last_ok_at ? formatDateTime(job.last_ok_at, WHEN, locale) : "—"}</td>
                       <td>
                         {job.runs} / {job.failures}
                       </td>
@@ -95,7 +99,7 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
                         {Object.entries(job.last_result)
                           .filter(([, v]) => v)
                           .map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`)
-                          .join(" · ") || "nothing to do"}
+                          .join(" · ") || t("nothingToDo")}
                       </td>
                     </tr>
                   ))}
@@ -108,35 +112,34 @@ function SystemStatusScreen({ accessToken }: SystemStatusScreenProps) {
       <div className="col-12">
         <Card>
           <CardHeader>
-            <CardTitle>Deliveries, last 24 hours</CardTitle>
+            <CardTitle>{t("deliveries")}</CardTitle>
           </CardHeader>
           <CardBody>
             <div className="row g-3">
-              <Stat label="Emails sent" value={status.emails_24h.sent} />
-              <Stat label="Emails failed" value={status.emails_24h.failed} tone={status.emails_24h.failed ? "text-danger" : ""} />
-              <Stat label="Notifications sent" value={status.notifications_24h.sent} />
+              <Stat label={t("emailsSent")} value={status.emails_24h.sent} />
+              <Stat label={t("emailsFailed")} value={status.emails_24h.failed} tone={status.emails_24h.failed ? "text-danger" : ""} />
+              <Stat label={t("notificationsSent")} value={status.notifications_24h.sent} />
               <Stat
-                label="Notifications failed"
+                label={t("notificationsFailed")}
                 value={status.notifications_24h.failed}
                 tone={status.notifications_24h.failed ? "text-danger" : ""}
               />
             </div>
             <div className="row g-3 mt-1">
-              <Stat label="Hard bounces" value={status.emails_24h.bounces} tone={status.emails_24h.bounces ? "text-warning" : ""} />
+              <Stat label={t("hardBounces")} value={status.emails_24h.bounces} tone={status.emails_24h.bounces ? "text-warning" : ""} />
               <Stat
-                label="Spam complaints"
+                label={t("spamComplaints")}
                 value={status.emails_24h.complaints}
                 tone={status.emails_24h.complaints ? "text-danger" : ""}
               />
-              <Stat label="Not sent (suppressed)" value={status.emails_24h.suppressed} />
-              <Stat label="Suppressed addresses" value={status.emails_24h.suppressed_total} />
+              <Stat label={t("notSentSuppressed")} value={status.emails_24h.suppressed} />
+              <Stat label={t("suppressedAddresses")} value={status.emails_24h.suppressed_total} />
             </div>
             <div className="small text-secondary mt-2">
-              Bounces and complaints come from Amazon SES (the <code>email.ses_*</code> settings); a bounced or
-              complaining address gets no more mail until it's removed from the suppression list.
+              {t.rich("bouncesNote", { settings: "email.ses_*" })}
             </div>
             {status.emails_24h.queued > 0 && (
-              <div className="small text-secondary mt-2">{status.emails_24h.queued} email(s) waiting to be retried.</div>
+              <div className="small text-secondary mt-2">{t("queued", { n: status.emails_24h.queued })}</div>
             )}
           </CardBody>
         </Card>
